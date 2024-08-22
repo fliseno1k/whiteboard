@@ -9,13 +9,23 @@ const enum Mouse {
 	RIGHT, // secondary button (right button)
 };
 
+// predefined
+
+const AUTOSCROLL_STEP = 2;
+const AUTOSCROLL_SPEED = 20; // speed in 1..1000
+const AUTOSCROLL_MARGIN = 30; // px
+
 // state like
 let enabled = true;
 let scale = 1;
 let origin = [0.0, 0.0];
 let gridSize = [8, 8];
 let down = [0, 0];
+let dx = 0;
+let dy = 0;
+let timerId = null;
 
+const speed = Math.round(AUTOSCROLL_SPEED / 1000);
 const activeButtons = new Set<Mouse>();
 
 // initialize canvas
@@ -38,7 +48,7 @@ canvasEl.addEventListener("touchmove", ifEnabled(debugCanvasEvent));
 canvasEl.addEventListener("touchend", ifEnabled(debugCanvasEvent));
 canvasEl.addEventListener("touchcancel", ifEnabled(debugCanvasEvent));
 canvasEl.addEventListener("dblclick", ifEnabled(debugCanvasEvent));
-canvasEl.addEventListener("wheel", ifEnabled(debugCanvasEvent));
+canvasEl.addEventListener("wheel", ifEnabled(wheel));
 canvasEl.addEventListener("dragover", ifEnabled(debugCanvasEvent));
 canvasEl.addEventListener("drop", ifEnabled(debugCanvasEvent));
 canvasEl.addEventListener("keydown", ifEnabled(debugCanvasEvent));
@@ -81,6 +91,10 @@ function pointerMove(e: PointerEvent) {
 		moveOrigin(dx, dy);
 		down = [e.offsetX, e.offsetY];
 	}
+}
+
+function wheel(e: PointerEvent) {
+  wheelCanvas(e);
 }
 
 function moveOrigin(dx: number, dy: number) {
@@ -171,12 +185,12 @@ function drawGrid() {
       [].map((v) => v * thick)
     );
 
-	for (let i = 0; i <= wc; i++) {
+	for (let i = 0; i <= wc + w; i++) {
 		const x = p1[0] + i * w - (p1[0] % w);
 		line(x, p1[1], x, p2[1]);
 	}
 
-	for (let i = 0; i <= wh; i++) {
+	for (let i = 0; i <= wh + h; i++) {
 		const y = p1[1] + i * h - (p1[1] % h);
 		line(p1[0], y, p2[0], y);
 	}
@@ -191,7 +205,46 @@ function line(
     y2: number,
 ) {
     g.beginPath();
-	g.moveTo(x1, y1);
-	g.lineTo(x2, y2);
-	g.stroke();
+    g.moveTo(x1, y1);
+    g.lineTo(x2, y2);
+    g.stroke();
+}
+
+function timerHandler() {
+	let scrolled = false;
+
+	if (dx !== 0) {
+	  let x = Math.round(origin[0] + dx);
+	  if (origin[0] !== x) {
+      origin[0] = x;
+      scrolled = true;
+	  }
+	}
+
+	if (dy !== 0) {
+	  let y = Math.round(origin[1] + this.dy);
+	  if (origin[1] !== y) {
+      origin[1] = y;
+      scrolled = true;
+	  }
+	}
+
+	if (scrolled) {
+	  repaint(true);
+	}
+};
+
+function wheelCanvas(e: PointerEvent) {
+  const [x, y] = CCSPointFromPointerEvent(e);
+  const dx = -e.deltaX;
+  const dy = -e.deltaY;
+  const h = getSize()[1] / (pixelRatio * 4);
+  moveOrigin(dx, dy);
+}
+
+function CCSPointFromPointerEvent(e: PointerEvent): [number, number] {
+  const rect = canvasEl.getBoundingClientRect();
+  let _p = [e.clientX - rect.left, e.clientY - rect.top];
+  let p = [_p[0] * pixelRatio, _p[1] * pixelRatio];
+  return p;
 }
