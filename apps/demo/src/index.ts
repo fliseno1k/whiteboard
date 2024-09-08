@@ -1,16 +1,14 @@
 import "./style.css";
 
-
-// types 
+// types
 
 type Point = [number, number];
-
 
 const enum Mouse {
 	LEFT, // main button (left button)
 	WHEEL, // auxiliary button (wheel or middle button)
 	RIGHT, // secondary button (right button)
-};
+}
 
 // state like
 let enabled = true;
@@ -50,9 +48,8 @@ canvasEl.addEventListener("drop", ifEnabled(debugCanvasEvent));
 canvasEl.addEventListener("keydown", ifEnabled(debugCanvasEvent));
 
 // window event listeners
-window.addEventListener('resize', fit);
-window.addEventListener('DOMContentLoaded', fit);
-
+window.addEventListener("resize", fit);
+window.addEventListener("DOMContentLoaded", fit);
 
 function ifEnabled<Fn extends (..._: any) => any, T extends Parameters<Fn>>(fn: Fn) {
 	return (...args: T) => {
@@ -61,7 +58,7 @@ function ifEnabled<Fn extends (..._: any) => any, T extends Parameters<Fn>>(fn: 
 	};
 }
 
-function debugCanvasEvent(e: Event |PointerEvent | TouchEvent | WheelEvent) {
+function debugCanvasEvent(e: Event | PointerEvent | TouchEvent | WheelEvent) {
 	console.log(`[canvas event]: ${e.type}`);
 }
 
@@ -143,8 +140,8 @@ function moveOrigin(dx: number, dy: number) {
 }
 
 function setOrigin(x: number, y: number) {
-    origin = [x, y];
-    repaint();
+	origin = [x, y];
+	repaint();
 }
 
 function fit() {
@@ -153,12 +150,12 @@ function fit() {
 }
 
 function setSize(width: number, height: number) {
-    canvasEl.width = width;
-    canvasEl.height = height;
-    canvasEl.width = Math.floor(width * pixelRatio);
-    canvasEl.height = Math.floor(height * pixelRatio);
-    canvasEl.style.width = width + "px";
-    canvasEl.style.height = height + "px";
+	canvasEl.width = width;
+	canvasEl.height = height;
+	canvasEl.width = Math.floor(width * pixelRatio);
+	canvasEl.height = Math.floor(height * pixelRatio);
+	canvasEl.style.width = width + "px";
+	canvasEl.style.height = height + "px";
 
 	repaint();
 }
@@ -181,9 +178,9 @@ function setScale(next: number) {
 }
 
 function globalCoordTransformRev(point: [number, number]): number[] {
-    const x = point[0] / pixelRatio / scale - origin[0];
-    const y = point[1] / pixelRatio / scale - origin[1];
-    return [x, y];
+	const x = point[0] / pixelRatio / scale - origin[0];
+	const y = point[1] / pixelRatio / scale - origin[1];
+	return [x, y];
 }
 
 function repaint() {
@@ -192,22 +189,19 @@ function repaint() {
 }
 
 function clearBackground() {
-	g.fillStyle = '#242424';
-    g.fillRect(0, 0, canvasEl.width, canvasEl.height);
+	g.fillStyle = "#242424";
+	g.fillRect(0, 0, canvasEl.width, canvasEl.height);
 }
 
 function globalTransform() {
-    g.translate(
-      origin[0] * scale * pixelRatio,
-      origin[1] * scale * pixelRatio
-    );
-    g.scale(scale * pixelRatio, scale * pixelRatio);
+	g.translate(origin[0] * scale * pixelRatio, origin[1] * scale * pixelRatio);
+	g.scale(scale * pixelRatio, scale * pixelRatio);
 }
 
 function drawGrid() {
 	const sz = getSize();
 
-	g.save()
+	g.save();
 	globalTransform();
 
 	const p1 = globalCoordTransformRev([0, 0]);
@@ -229,14 +223,12 @@ function drawGrid() {
 	const wc = Math.floor((p2[0] - p1[0]) / w);
 	const wh = Math.floor((p2[1] - p1[1]) / h);
 
-	g.strokeStyle = '#C0C0C0';
+	g.strokeStyle = "#C0C0C0";
 	g.lineWidth = thick;
-    g.lineCap = "round";
-    g.lineJoin = "round";
-    g.globalAlpha = 1.0;
-    g.setLineDash(
-      [].map((v) => v * thick)
-    );
+	g.lineCap = "round";
+	g.lineJoin = "round";
+	g.globalAlpha = 1.0;
+	g.setLineDash([].map((v) => v * thick));
 
 	for (let i = 0; i <= wc + w; i++) {
 		const x = p1[0] + i * w - (p1[0] % w);
@@ -251,21 +243,16 @@ function drawGrid() {
 	g.restore();
 }
 
-function line(
-    x1: number,
-    y1: number,
-    x2: number,
-    y2: number,
-) {
-    g.beginPath();
-    g.moveTo(x1, y1);
-    g.lineTo(x2, y2);
-    g.stroke();
+function line(x1: number, y1: number, x2: number, y2: number) {
+	g.beginPath();
+	g.moveTo(x1, y1);
+	g.lineTo(x2, y2);
+	g.stroke();
 }
 
 function wheelCanvas(e: WheelEvent) {
-  	const dx = -e.deltaX;
-  	const dy = -e.deltaY;
+	const dx = -e.deltaX;
+	const dy = -e.deltaY;
 	e.preventDefault();
 
 	if (e.ctrlKey || e.metaKey) {
@@ -275,19 +262,94 @@ function wheelCanvas(e: WheelEvent) {
 		setScale(scale * (1 + dy / h));
 
 		const p2 = globalCoordTransformRev(p);
-		moveOrigin(p2[0] - p1[0], p2[1] - p1[1]);	
+		moveOrigin(p2[0] - p1[0], p2[1] - p1[1]);
 	} else {
 		moveOrigin(dx, dy);
 	}
 }
 
 function CCSPointFromPointerEvent(e: PointerEvent | WheelEvent): Point {
-  const rect = canvasEl.getBoundingClientRect();
-  let _p = [e.clientX - rect.left, e.clientY - rect.top];
-  let p = [_p[0] * pixelRatio, _p[1] * pixelRatio];
-  return p as Point;
+	const rect = canvasEl.getBoundingClientRect();
+	let _p = [e.clientX - rect.left, e.clientY - rect.top];
+	let p = [_p[0] * pixelRatio, _p[1] * pixelRatio];
+	return p as Point;
 }
 
 function focus() {
 	canvasEl.focus();
+}
+
+function createTouchEvent(element: HTMLCanvasElement, ratio: number, e: TouchEvent): CanvasPointerEvent {
+	const isDoubleTouch = e.touches.length === 2;
+	const rect = element.getBoundingClientRect();
+
+	const cx = isDoubleTouch ? (e.touches[0].clientX + e.touches[1].clientX) / 2 : e.touches[0].clientX;
+	const cy = isDoubleTouch ? (e.touches[0].clientY + e.touches[1].clientY) / 2 : e.touches[0].clientY;
+	const p = [(cx - rect.left) * ratio, (cy - rect.top) * ratio];
+
+	const options = {
+		button: 0,
+		shiftKey: false,
+		altKey: false,
+		ctrlKey: false,
+		metaKey: false,
+		touchDistance: 0,
+	};
+
+	if (isDoubleTouch) {
+		const xd = e.touches[0].clientX - e.touches[1].clientX;
+		const yd = e.touches[0].clientY - e.touches[1].clientY;
+		options.touchDistance = Math.sqrt(xd * xd + yd * yd);
+	}
+
+	return new CanvasPointerEvent(p[0], p[1], options);
+}
+
+function createPointerEvent(element: HTMLCanvasElement, ratio: number, e: PointerEvent): CanvasPointerEvent {
+	const rect = element.getBoundingClientRect();
+	const [x, y] = [(e.clientX - rect.left) * ratio, (e.clientY - rect.top) * ratio];
+	return new CanvasPointerEvent(x, y, e);
+}
+
+class CanvasPointerEvent {
+	/**
+	 * X-position in CCS (Canvas coord-system)
+	 */
+	x: number;
+
+	/**
+	 * Y-position in CCS (Canvas coord-system)
+	 */
+	y: number;
+
+	button: number;
+	shiftDown: boolean;
+	altDown: boolean;
+	ctrlDown: boolean;
+	ModDown: boolean;
+	leftButtonDown: boolean;
+	touchDistance: number;
+
+	constructor(
+		x: number,
+		y: number,
+		e: {
+			button: number;
+			shiftKey: boolean;
+			altKey: boolean;
+			ctrlKey: boolean;
+			metaKey: boolean;
+			touchDistance?: number;
+		},
+	) {
+		this.x = x;
+		this.y = y;
+		this.button = e.button;
+		this.shiftDown = e.shiftKey;
+		this.altDown = e.altKey;
+		this.ctrlDown = e.ctrlKey;
+		this.ModDown = e.metaKey || e.ctrlKey;
+		this.leftButtonDown = false;
+		this.touchDistance = e.touchDistance || 0;
+	}
 }

@@ -1,9 +1,12 @@
 import { isProduction } from "./env";
 
+/**
+ * Invariant error text message
+ */
 const prefix: string = "Invariant failed";
 
 /**
- * Invariant function that throws an Error if condition fails
+ * Invariant function that throws an erro if condition fails
  */
 export function invariant(condition: any, message: string | (() => string)): asserts condition {
 	if (condition) {
