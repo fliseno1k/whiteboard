@@ -124,4 +124,51 @@ export class Viewport {
 
 		this._scale = newScale;
 	}
+
+	/**
+	 * Converts screen coordinates to world coordinates.
+	 * @param x - The x-coordinate in screen space.
+	 * @param y - The y-coordinate in screen space.
+	 * @param canvas - The HTMLCanvasElement.
+	 */
+	public screenToWorld(x: number, y: number, canvas: HTMLCanvasElement): [number, number] {
+		const rect = canvas.getBoundingClientRect();
+		const canvasX = (x - rect.left) * (canvas.width / rect.width);
+		const canvasY = (y - rect.top) * (canvas.height / rect.height);
+
+		// Account for device pixel ratio if necessary
+		const devicePixelRatio = window.devicePixelRatio || 1;
+		const adjustedX = canvasX / devicePixelRatio;
+		const adjustedY = canvasY / devicePixelRatio;
+
+		// Inverse viewport transformations
+		const worldX = (adjustedX - this.offsetX) / this.scale;
+		const worldY = (adjustedY - this.offsetY) / this.scale;
+
+		return [worldX, worldY];
+	}
+
+	/**
+	 * Converts world coordinates to canvas coordinates.
+	 * @param x - The x-coordinate in world space.
+	 * @param y - The y-coordinate in world space.
+	 */
+	public worldToCanvas(x: number, y: number): [number, number] {
+		const canvasX = x * this.scale + this.offsetX;
+		const canvasY = y * this.scale + this.offsetY;
+
+		return [canvasX, canvasY];
+	}
+
+	/**
+	 * Converts canvas coordinates to world coordinates.
+	 * @param x - The x-coordinate in canvas space.
+	 * @param y - The y-coordinate in canvas space.
+	 */
+	public canvasToWorld(x: number, y: number): [number, number] {
+		const worldX = (x - this.offsetX) / this.scale;
+		const worldY = (y - this.offsetY) / this.scale;
+
+		return [worldX, worldY];
+	}
 }
