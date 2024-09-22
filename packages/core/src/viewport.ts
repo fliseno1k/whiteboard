@@ -1,3 +1,4 @@
+import { Canvas } from "./canvas";
 import { genClamp } from "./math";
 
 /**
@@ -88,15 +89,15 @@ export class Viewport {
 	/**
 	 * Applies the current scale and translation to the canvas context.
 	 */
-	public applyTransform(context: CanvasRenderingContext2D): void {
-		context.setTransform(this._scale, 0, 0, this._scale, this._offsetX, this._offsetY);
+	public applyTransform(canvas: Canvas): void {
+		canvas.context.setTransform(this._scale, 0, 0, this._scale, this._offsetX, this._offsetY);
 	}
 
 	/**
 	 * Resets the canvas transformation to the default state.
 	 */
-	public resetTransform(context: CanvasRenderingContext2D): void {
-		context.setTransform(1, 0, 0, 1, 0, 0);
+	public resetTransform(canvas: Canvas): void {
+		canvas.context.setTransform(1, 0, 0, 1, 0, 0);
 	}
 
 	/**
@@ -105,8 +106,8 @@ export class Viewport {
 	 * @param dy - amount to translate in the y-direction
 	 */
 	public translate(dx: number, dy: number): void {
-		this._offsetX += dx;
-		this._offsetY += dy;
+		this.offsetX += dx;
+		this.offsetY += dy;
 	}
 
 	/**
@@ -116,13 +117,13 @@ export class Viewport {
 	 * @param scale - The factor by which to zoom.
 	 */
 	public zoomAtPoint(x: number, y: number, scale: number): void {
-		const newScale = this.clampScale(this._scale * scale);
+		const newScale = this._scale * scale;
 		const deltaScale = newScale - this._scale;
 
 		this.offsetX -= ((x - this._offsetX) * deltaScale) / newScale;
 		this.offsetY -= ((y - this._offsetY) * deltaScale) / newScale;
 
-		this._scale = newScale;
+		this.scale = newScale;
 	}
 
 	/**
@@ -131,10 +132,12 @@ export class Viewport {
 	 * @param y - The y-coordinate in screen space.
 	 * @param canvas - The HTMLCanvasElement.
 	 */
-	public screenToWorld(x: number, y: number, canvas: HTMLCanvasElement): [number, number] {
-		const rect = canvas.getBoundingClientRect();
-		const canvasX = (x - rect.left) * (canvas.width / rect.width);
-		const canvasY = (y - rect.top) * (canvas.height / rect.height);
+	public screenToWorld(x: number, y: number, ratio: number, canvas: Canvas): [number, number] {
+		const [width, height] = canvas.size;
+		const rect = canvas.element.getBoundingClientRect();
+
+		const canvasX = (x - rect.left) * (width / rect.width);
+		const canvasY = (y - rect.top) * (height / rect.height);
 
 		// Account for device pixel ratio if necessary
 		const devicePixelRatio = window.devicePixelRatio || 1;
@@ -142,8 +145,8 @@ export class Viewport {
 		const adjustedY = canvasY / devicePixelRatio;
 
 		// Inverse viewport transformations
-		const worldX = (adjustedX - this.offsetX) / this.scale;
-		const worldY = (adjustedY - this.offsetY) / this.scale;
+		const worldX = (adjustedX - this._offsetX) / this._scale;
+		const worldY = (adjustedY - this._offsetY) / this._scale;
 
 		return [worldX, worldY];
 	}
@@ -154,8 +157,8 @@ export class Viewport {
 	 * @param y - The y-coordinate in world space.
 	 */
 	public worldToCanvas(x: number, y: number): [number, number] {
-		const canvasX = x * this.scale + this.offsetX;
-		const canvasY = y * this.scale + this.offsetY;
+		const canvasX = x * this._scale + this._offsetX;
+		const canvasY = y * this._scale + this._offsetY;
 
 		return [canvasX, canvasY];
 	}
@@ -166,8 +169,8 @@ export class Viewport {
 	 * @param y - The y-coordinate in canvas space.
 	 */
 	public canvasToWorld(x: number, y: number): [number, number] {
-		const worldX = (x - this.offsetX) / this.scale;
-		const worldY = (y - this.offsetY) / this.scale;
+		const worldX = (x - this._offsetX) / this._scale;
+		const worldY = (y - this._offsetY) / this._scale;
 
 		return [worldX, worldY];
 	}

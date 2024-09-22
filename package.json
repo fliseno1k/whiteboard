@@ -1,22 +1,22 @@
 {
-  "name": "canvas-whiteboard",
-  "private": true,
-  "version": "0.0.0",
-  "type": "module",
-  "scripts": {
-    "dev": "vite",
-    "build": "tsc && vite build",
-    "preview": "vite preview"
-  },
-  "keywords": [],
-  "author": "",
-  "workspaces": [
-    "packages/*",
-    "apps/*"
-  ],
-  "devDependencies": {
-    "tsup": "^8.2.4",
-    "typescript": "^5.5.3",
-    "vite": "^5.4.1"
-  }
+	"name": "canvas-whiteboard",
+	"version": "0.0.0",
+	"type": "module",
+	"scripts": {
+		"dev": "vite",
+		"build": "tsc && vite build",
+		"preview": "vite preview"
+	},
+	"keywords": [],
+	"author": "",
+	"private": true,
+	"workspaces": [
+		"packages/*",
+		"apps/*"
+	],
+	"devDependencies": {
+		"tsup": "^8.2.4",
+		"typescript": "^5.5.3",
+		"vite": "^5.4.1"
+	}
 }
