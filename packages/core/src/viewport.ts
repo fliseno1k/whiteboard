@@ -87,21 +87,21 @@ export class Viewport {
 	}
 
 	/**
-	 * Applies the current scale and translation to the canvas context.
+	 * Apply the current scale and translation to the canvas context.
 	 */
 	public applyTransform(canvas: Canvas): void {
 		canvas.context.setTransform(this._scale, 0, 0, this._scale, this._offsetX, this._offsetY);
 	}
 
 	/**
-	 * Resets the canvas transformation to the default state.
+	 * Reset the canvas transformation to the default state.
 	 */
 	public resetTransform(canvas: Canvas): void {
 		canvas.context.setTransform(1, 0, 0, 1, 0, 0);
 	}
 
 	/**
-	 * Translates the viewport by specified amounts
+	 * Translate the viewport by specified amounts
 	 * @param dx - amount to translate in the x-direction
 	 * @param dy - amount to translate in the y-direction
 	 */
@@ -111,7 +111,7 @@ export class Viewport {
 	}
 
 	/**
-	 * Adjusts the viewport to zoom at a specific point.
+	 * Adjust the viewport to zoom at a specific point.
 	 * @param x - The x-coordinate to zoom around.
 	 * @param y - The y-coordinate to zoom around.
 	 * @param scale - The factor by which to zoom.
@@ -127,7 +127,7 @@ export class Viewport {
 	}
 
 	/**
-	 * Converts screen coordinates to world coordinates.
+	 * Convert screen coordinates to world coordinates.
 	 * @param x - The x-coordinate in screen space.
 	 * @param y - The y-coordinate in screen space.
 	 * @param canvas - The HTMLCanvasElement.
@@ -164,7 +164,7 @@ export class Viewport {
 	}
 
 	/**
-	 * Converts canvas coordinates to world coordinates.
+	 * Convert canvas coordinates to world coordinates.
 	 * @param x - The x-coordinate in canvas space.
 	 * @param y - The y-coordinate in canvas space.
 	 */
