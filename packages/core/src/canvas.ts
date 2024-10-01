@@ -37,7 +37,7 @@ export class Canvas {
 	 */
 	public setStyles(
 		styleSheet: Partial<
-			Pick<CanvasRenderingContext2D, "lineCap" | "lineJoin" | "globalAlpha" | "strokeStyle"> & {
+			Pick<CanvasRenderingContext2D, "lineCap" | "lineJoin" | "globalAlpha" | "strokeStyle" | "fillStyle"> & {
 				lineDash: Parameters<CanvasRenderingContext2D["setLineDash"]>[0];
 			}
 		>,
