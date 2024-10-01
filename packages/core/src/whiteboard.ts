@@ -1,4 +1,5 @@
 import { Canvas } from "./canvas";
+import { EventManager } from "./event-manager";
 import { Grid } from "./grid";
 import { Viewport } from "./viewport";
 
@@ -6,31 +7,35 @@ export class Whiteboard {
 	/**
 	 * Editor root html element
 	 */
-	private readonly holder: HTMLElement;
+	public readonly holder: HTMLElement;
 
 	/**
 	 * Pixel ratio value
 	 */
-	private readonly ratio: number;
+	public readonly ratio: number;
 
 	/**
 	 * Wrapper around canvas
 	 */
-	private readonly canvas: Canvas;
+	public readonly canvas: Canvas;
 
 	/**
 	 * Canvas viewport
 	 */
-	private readonly viewport: Viewport;
+	public readonly viewport: Viewport;
 
 	/**
 	 * Canvas grid renderer
 	 */
-	private readonly grid: Grid;
+	public readonly grid: Grid;
 
 	/**
-	 *
-	 * @param editorHolder - elemtn into which canvas will be putted
+	 * Canvas events manager
+	 */
+	private readonly eventManager: EventManager;
+
+	/**
+	 * @param editorHolder - element into which canvas will be putted
 	 */
 	public constructor(editorHolder: HTMLElement) {
 		this.holder = editorHolder;
@@ -39,9 +44,12 @@ export class Whiteboard {
 		const canvasElement = this.createCanvas();
 		this.holder.appendChild(canvasElement);
 
+		this.grid = new Grid({ size: 16, steps: 5, visible: true });
 		this.canvas = new Canvas(canvasElement, this.ratio);
 		this.viewport = new Viewport();
-		this.grid = new Grid({ size: 16, steps: 5, visible: true });
+		this.eventManager = new EventManager(this);
+
+		this.eventManager.attatchEvents();
 	}
 
 	/**
@@ -55,6 +63,27 @@ export class Whiteboard {
 	}
 
 	/**
+	 * Render canvas content
+	 */
+	public render(): void {
+		requestAnimationFrame(() => {
+			this.cleaBackground();
+			this.grid.render({
+				canvas: this.canvas,
+				viewport: this.viewport,
+			});
+		});
+	}
+
+	/**
+	 *
+	 */
+	private cleaBackground(): void {
+		this.canvas.context.fillStyle = "#1b1715";
+		this.canvas.context.fillRect(0, 0, ...this.canvas.size);
+	}
+
+	/**
 	 * Creates canvas html element
 	 */
 	private createCanvas(): HTMLCanvasElement {
@@ -65,15 +94,5 @@ export class Whiteboard {
 		canvasElement.style.touchAction = "none";
 
 		return canvasElement;
-	}
-
-	/**
-	 * Render canvas content
-	 */
-	private render(): void {
-		this.grid.render({
-			canvas: this.canvas,
-			viewport: this.viewport,
-		});
 	}
 }
