@@ -84,8 +84,8 @@ export class Grid {
 			globalAlpha: 1.0,
 		});
 
-		const centerX = Math.round(-vOffsetX + width / 2 - ((width / 2) % this.size) + lineOffsetX);
-		const centerY = Math.round(-vOffsetY + height / 2 - ((height / 2) % this.size) + lineOffsetY);
+		const centerX = -vOffsetX + width / 2 - ((width / 2) % this.size) + lineOffsetX;
+		const centerY = -vOffsetY + height / 2 - ((height / 2) % this.size) + lineOffsetY;
 
 		let isBold = false;
 
