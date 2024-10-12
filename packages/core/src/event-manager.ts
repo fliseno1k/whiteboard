@@ -1,3 +1,4 @@
+import { type Gesture, PanGesture } from "./gestures";
 import { EVENT, noop } from "./utils";
 import { Whiteboard } from "./whiteboard";
 
@@ -5,14 +6,20 @@ import { Whiteboard } from "./whiteboard";
  * Manage event handling and work delegation to current editor tools
  */
 export class EventManager {
-	private isPanning: boolean;
-
-	private panStartCoords: [number, number];
-
 	/**
 	 * Active pointer events set
 	 */
 	private readonly pointers: Map<PointerEvent["pointerId"], PointerEvent>;
+
+	/**
+	 * Gestures list
+	 */
+	private readonly gestures: Array<Gesture>;
+
+	/**
+	 * Active gestures list
+	 */
+	private readonly activeGestures: Set<Gesture>;
 
 	/**
 	 * Whiteboard
@@ -22,10 +29,10 @@ export class EventManager {
 	public constructor(whiteboard: Whiteboard) {
 		this.whiteboard = whiteboard;
 
-		this.isPanning = false;
-		this.panStartCoords = [0, 0];
-
 		this.pointers = new Map();
+
+		this.gestures = [new PanGesture(whiteboard)];
+		this.activeGestures = new Set();
 	}
 
 	/**
@@ -38,11 +45,6 @@ export class EventManager {
 		canvasElement.addEventListener(EVENT.POINTER_MOVE, this.handlePointerMove);
 		canvasElement.addEventListener(EVENT.POINTER_UP, this.handlePointerUp);
 		canvasElement.addEventListener(EVENT.POINTER_CANCEL, this.handlePointerCancel);
-
-		canvasElement.addEventListener(EVENT.TOUCH_START, noop);
-		canvasElement.addEventListener(EVENT.TOUCH_MOVE, noop);
-		canvasElement.addEventListener(EVENT.TOUCH_END, noop);
-		canvasElement.addEventListener(EVENT.TOUCH_CANCEL, noop);
 
 		canvasElement.addEventListener(EVENT.DOUBLE_CLICK, noop);
 		canvasElement.addEventListener(EVENT.WHEEL, noop, { passive: true });
@@ -69,74 +71,55 @@ export class EventManager {
 		this.pointers.set(event.pointerId, event);
 		this.whiteboard.canvas.element.setPointerCapture(event.pointerId);
 
-		const { offsetX, offsetY } = event;
+		this.gestures.forEach((gesture) => gesture.onPointerDown(event));
+		this.updateActiveGestures();
 
-		if (this.shouldStartPanning(event)) {
-			this.isPanning = true;
-			this.panStartCoords = [offsetX, offsetY];
-		} else {
-			this.proccessPointerEvent(event);
-		}
+		if (this.isAnyGestureActive()) return;
+
+		this.proccessPointerEvent(event);
 	};
 
 	private handlePointerMove = (event: PointerEvent): void => {
 		event.preventDefault();
 
-		if (this.pointers.has(event.pointerId)) {
-			this.pointers.set(event.pointerId, event);
+		if (!this.pointers.has(event.pointerId)) return;
 
-			if (this.isPanning) {
-				this.updatePan(event);
-			} else {
-				this.proccessPointerEvent(event);
-			}
-		}
+		this.pointers.set(event.pointerId, event);
+
+		this.gestures.forEach((gesture) => gesture.onPointerMove(event));
+
+		if (this.isAnyGestureActive()) return;
+
+		this.proccessPointerEvent(event);
 	};
 
 	private handlePointerUp = (event: PointerEvent): void => {
 		event.preventDefault();
 
 		this.pointers.delete(event.pointerId);
+		this.whiteboard.canvas.element.releasePointerCapture(event.pointerId);
 
-		if (this.isPanning) {
-			this.endPan();
-		} else {
-			this.proccessPointerEvent(event);
-		}
+		this.gestures.forEach((gesture) => gesture.onPointerUp(event));
+		this.updateActiveGestures();
+
+		if (this.isAnyGestureActive()) return;
+
+		this.proccessPointerEvent(event);
 	};
 
 	private handlePointerCancel = (event: PointerEvent): void => {
-		event.preventDefault();
-
-		this.pointers.delete(event.pointerId);
-
-		if (this.isPanning) {
-			this.endPan();
-		} else {
-			this.proccessPointerEvent(event);
-		}
+		this.handlePointerUp(event);
 	};
 
 	private proccessPointerEvent(event: PointerEvent): void {}
 
-	private shouldStartPanning(event: PointerEvent): boolean {
-		return event.button === 1 || event.button === 2 || event.shiftKey;
+	private isAnyGestureActive(): boolean {
+		return this.activeGestures.size > 0;
 	}
 
-	private updatePan(event: PointerEvent): void {
-		const scale = this.whiteboard.viewport.scale;
-		const deltaX = (event.offsetX - this.panStartCoords[0]) / scale;
-		const deltaY = (event.offsetY - this.panStartCoords[1]) / scale;
+	private updateActiveGestures(): void {
+		this.activeGestures.clear();
 
-		this.whiteboard.viewport.offsetX += deltaX;
-		this.whiteboard.viewport.offsetY += deltaY;
-
-		this.panStartCoords = [event.offsetX, event.offsetY];
-
-		this.whiteboard.render();
-	}
-
-	private endPan(): void {
-		this.isPanning = false;
+		this.gestures.forEach((gesture) => gesture.isActive && this.activeGestures.add(gesture));
 	}
 }
