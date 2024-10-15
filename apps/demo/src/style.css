@@ -22,6 +22,7 @@ body {
 	position: absolute;
 	inset: 0;
 	margin: 0;
+	overscroll-behavior: none;
 }
 
 .whiteboard-holder {
