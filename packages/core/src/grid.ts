@@ -1,5 +1,4 @@
-import { Canvas } from "./canvas";
-import { Viewport } from "./viewport";
+import { Whiteboard } from "./whiteboard";
 
 export type GridOptions = {
 	size: number;
@@ -7,36 +6,23 @@ export type GridOptions = {
 	visible: boolean;
 };
 
-export type RenderOptions = {
-	viewport: Viewport;
-	canvas: Canvas;
-};
-
 /**
  * Draws canvas grid
  */
 export class Grid {
 	/**
-	 * Size of single grid cell
+	 * Grid options
 	 */
-	private size: GridOptions["size"];
+	private options: GridOptions;
 
 	/**
-	 * Number of lines inside single grid cell
+	 * Whiteboard instance
 	 */
-	private steps: GridOptions["steps"];
+	private readonly whiteboard: Whiteboard;
 
-	/**
-	 * Need to show grid
-	 */
-	private visible: GridOptions["visible"];
-
-	public constructor(options: GridOptions) {
-		const { size, steps, visible } = options;
-
-		this.size = options.size;
-		this.steps = options.steps;
-		this.visible = options.visible;
+	public constructor(whiteboard: Whiteboard, options: GridOptions) {
+		this.whiteboard = whiteboard;
+		this.options = Object.assign({}, options);
 	}
 
 	/**
@@ -44,39 +30,38 @@ export class Grid {
 	 * @param next - is grid pattern should to be present
 	 */
 	public toggle(next: GridOptions["visible"]): void {
-		this.visible = next;
+		this.options.visible = next;
 	}
 
 	/**
 	 * Render grid
 	 */
-	public render(options: RenderOptions): void {
-		if (!this.visible) {
+	public render(): void {
+		if (!this.options.visible) {
 			return;
 		}
 
-		this.renderGridPattern(options);
+		this.renderGridPattern();
 	}
 
 	/**
 	 * Render grid pattern on canvas
 	 */
-	private renderGridPattern(options: RenderOptions): void {
-		const { canvas, viewport } = options;
+	private renderGridPattern(): void {
+		const { canvas, viewport } = this.whiteboard;
+		const { size, steps } = this.options;
 
-		const [vOffsetX, vOffsetY] = [viewport.offsetX, viewport.offsetY];
+		const offsetX = (viewport.offsetX % size) - size;
+		const offsetY = (viewport.offsetY % size) - size;
 
-		const lineOffsetX = (vOffsetX % this.size) + this.size;
-		const lineOffsetY = (vOffsetY % this.size) + this.size;
+		const [width, height] = canvas.size;
 
-		const cellSize = this.steps * this.size;
+		const actualGridSize = size * viewport.scale;
 
-		const [width, height] = canvas.size.map((v) => v / viewport.scale);
-
-		const lineBolding = [() => this.setNoneBoldStyles(canvas), () => this.setBoldStyles(canvas)];
+		const spaceWidth = 1 / viewport.scale;
 
 		canvas.context.save();
-		viewport.applyTransform(canvas);
+		viewport.applyTransform();
 
 		canvas.setStyles({
 			lineCap: "round",
@@ -84,39 +69,38 @@ export class Grid {
 			globalAlpha: 1.0,
 		});
 
-		const centerX = -vOffsetX + width / 2 - ((width / 2) % this.size) + lineOffsetX;
-		const centerY = -vOffsetY + height / 2 - ((height / 2) % this.size) + lineOffsetY;
-
 		let isBold = false;
 
-		for (let x = 0; centerX + x < -vOffsetX + width + lineOffsetX; x += this.size) {
-			const nextLeftX = centerX - x - this.size;
-			isBold = this.steps > 1 && nextLeftX % cellSize === 0;
-			lineBolding[+isBold]();
+		this.setBoldStyles();
 
-			canvas.line(nextLeftX, -vOffsetY, nextLeftX, Math.ceil(-vOffsetY + height));
+		for (let x = -offsetX; x < offsetX + width + size; x += size) {
+			const isBold = steps > 1 && Math.round(x - scrollX) % (steps * size) === 0;
+			if (!isBold && actualGridSize < 10) {
+				continue;
+			}
 
-			const nextRightX = centerX + x;
+			const lineWidth = Math.min(1 / viewport.scale, isBold ? 4 : 1);
+			const lineDash = [lineWidth * 3, spaceWidth + (lineWidth + spaceWidth)];
+			canvas.context.lineWidth = lineWidth;
 
-			isBold = this.steps > 1 && nextRightX % cellSize === 0;
-			lineBolding[+isBold]();
+			canvas.setStyles({ lineDash: isBold ? [] : lineDash });
 
-			canvas.line(nextRightX, -vOffsetY, nextRightX, Math.ceil(-vOffsetY + height));
+			canvas.line(x, offsetY - size, x, Math.ceil(offsetY + height + size));
 		}
 
-		for (let y = 0; centerY + y < -vOffsetY + height + lineOffsetY; y += this.size) {
-			const nextTopY = centerY - y - this.size;
-			isBold = this.steps > 1 && nextTopY % cellSize === 0;
-			lineBolding[+isBold]();
+		// for (let y = 0; centerY + y < -vOffsetY + height + lineOffsetY; y += size) {
+		// 	const nextTopY = centerY - y - size;
+		// 	isBold = steps > 1 && nextTopY % cellSize === 0;
+		// 	lineBolding[+isBold]();
 
-			canvas.line(-vOffsetX, nextTopY, Math.ceil(-vOffsetX + width), nextTopY);
+		// 	canvas.line(-vOffsetX, nextTopY, Math.ceil(-vOffsetX + width), nextTopY);
 
-			const nextBottomY = centerY + y;
-			isBold = this.steps > 1 && nextBottomY % cellSize === 0;
-			lineBolding[+isBold]();
+		// 	const nextBottomY = centerY + y;
+		// 	isBold = steps > 1 && nextBottomY % cellSize === 0;
+		// 	lineBolding[+isBold]();
 
-			canvas.line(-vOffsetX, nextBottomY, Math.ceil(-vOffsetX + width), nextBottomY);
-		}
+		// 	canvas.line(-vOffsetX, nextBottomY, Math.ceil(-vOffsetX + width), nextBottomY);
+		// }
 
 		canvas.context.restore();
 	}
@@ -124,8 +108,8 @@ export class Grid {
 	/**
 	 * Set canvas styles for bold line
 	 */
-	private setBoldStyles(canvas: RenderOptions["canvas"]): void {
-		canvas.setStyles({
+	private setBoldStyles(): void {
+		this.whiteboard.canvas.setStyles({
 			strokeStyle: "#2d2d2d",
 			lineDash: [],
 		});
@@ -134,8 +118,8 @@ export class Grid {
 	/**
 	 * Set canvas styles for none-bold line
 	 */
-	private setNoneBoldStyles(canvas: RenderOptions["canvas"]): void {
-		canvas.setStyles({
+	private setNoneBoldStyles(): void {
+		this.whiteboard.canvas.setStyles({
 			strokeStyle: "#252423",
 			lineDash: [],
 		});

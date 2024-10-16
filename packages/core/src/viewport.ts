@@ -1,5 +1,6 @@
 import { Canvas } from "./canvas";
-import { genClamp } from "./math";
+import { clamp, genClamp } from "./math";
+import { Whiteboard } from "./whiteboard";
 
 /**
  * Encapsulates all the transformation logic required
@@ -23,28 +24,23 @@ export class Viewport {
 	private _scale: number;
 
 	/**
-	 * Clamp function for {@link _offsetX offsetX} argument
-	 */
-	private readonly clampOffsetX: (value: number) => number;
-
-	/**
-	 * Clamp function for {@link _offsetY offsetY} argument
-	 */
-	private readonly clampOffsetY: (value: number) => number;
-
-	/**
 	 * Clamp function for {@link _scale scale} argument
 	 */
 	private readonly clampScale: (value: number) => number;
 
-	public constructor() {
+	/**
+	 * Whiteboard instance
+	 */
+	private readonly whiteboard: Whiteboard;
+
+	public constructor(whiteboard: Whiteboard) {
 		this._scale = 1;
 		this._offsetX = 0;
 		this._offsetY = 0;
 
 		this.clampScale = genClamp(0.1, 10);
-		this.clampOffsetX = genClamp(-5000, 5000);
-		this.clampOffsetY = genClamp(-5000, 5000);
+
+		this.whiteboard = whiteboard;
 	}
 
 	/**
@@ -55,7 +51,12 @@ export class Viewport {
 	}
 
 	public set offsetX(value: number) {
-		this._offsetX = this.clampOffsetX(value);
+		const [width] = this.whiteboard.canvas.size;
+
+		const minOffsetX = -5000 * this.scale + width;
+		const maxOffsetX = 5000 * this.scale;
+
+		this._offsetX = clamp(value, minOffsetX, maxOffsetX);
 	}
 
 	/**
@@ -69,7 +70,12 @@ export class Viewport {
 	 * Set viewport vertical translation offset
 	 */
 	public set offsetY(value: number) {
-		this._offsetY = this.clampOffsetY(value);
+		const [_, height] = this.whiteboard.canvas.size;
+
+		const minOffsetY = -5000 * this.scale + height;
+		const maxOffsetY = 5000 * this.scale;
+
+		this._offsetY = clamp(value, minOffsetY, maxOffsetY);
 	}
 
 	/**
@@ -89,15 +95,15 @@ export class Viewport {
 	/**
 	 * Apply the current scale and translation to the canvas context.
 	 */
-	public applyTransform(canvas: Canvas): void {
-		canvas.context.setTransform(this._scale, 0, 0, this._scale, this._offsetX, this._offsetY);
+	public applyTransform(): void {
+		this.whiteboard.canvas.context.setTransform(this._scale, 0, 0, this._scale, this._offsetX, this._offsetY);
 	}
 
 	/**
 	 * Reset the canvas transformation to the default state.
 	 */
-	public resetTransform(canvas: Canvas): void {
-		canvas.context.setTransform(1, 0, 0, 1, 0, 0);
+	public resetTransform(): void {
+		this.whiteboard.canvas.context.setTransform(1, 0, 0, 1, 0, 0);
 	}
 
 	/**
@@ -112,41 +118,35 @@ export class Viewport {
 
 	/**
 	 * Adjust the viewport to zoom at a specific point.
-	 * @param x - The x-coordinate to zoom around.
-	 * @param y - The y-coordinate to zoom around.
+	 * @param x - The screen x-coordinate to zoom around.
+	 * @param y - The screen y-coordinate to zoom around.
 	 * @param scale - The factor by which to zoom.
 	 */
 	public zoomAtPoint(x: number, y: number, scale: number): void {
-		const newScale = this._scale * scale;
-		const deltaScale = newScale - this._scale;
+		const worldBeforeZoom = this.screenToWorld(x, y);
 
-		this.offsetX -= ((x - this._offsetX) * deltaScale) / newScale;
-		this.offsetY -= ((y - this._offsetY) * deltaScale) / newScale;
+		this.scale *= scale;
 
-		this.scale = newScale;
+		const worldAfterZoom = this.screenToWorld(x, y);
+
+		this.offsetX += ((worldAfterZoom[0] - worldBeforeZoom[0]) * this._scale) / this.whiteboard.ratio;
+		this.offsetY += ((worldAfterZoom[1] - worldBeforeZoom[1]) * this._scale) / this.whiteboard.ratio;
 	}
 
 	/**
 	 * Convert screen coordinates to world coordinates.
 	 * @param x - The x-coordinate in screen space.
 	 * @param y - The y-coordinate in screen space.
-	 * @param canvas - The HTMLCanvasElement.
 	 */
-	public screenToWorld(x: number, y: number, ratio: number, canvas: Canvas): [number, number] {
-		const [width, height] = canvas.size;
+	public screenToWorld(x: number, y: number): [number, number] {
+		const canvas = this.whiteboard.canvas;
 		const rect = canvas.element.getBoundingClientRect();
 
-		const canvasX = (x - rect.left) * (width / rect.width);
-		const canvasY = (y - rect.top) * (height / rect.height);
+		const canvasX = (x - rect.left) * this.whiteboard.ratio;
+		const canvasY = (y - rect.top) * this.whiteboard.ratio;
 
-		// Account for device pixel ratio if necessary
-		const devicePixelRatio = window.devicePixelRatio || 1;
-		const adjustedX = canvasX / devicePixelRatio;
-		const adjustedY = canvasY / devicePixelRatio;
-
-		// Inverse viewport transformations
-		const worldX = (adjustedX - this._offsetX) / this._scale;
-		const worldY = (adjustedY - this._offsetY) / this._scale;
+		const worldX = (canvasX - this._offsetX) / this._scale;
+		const worldY = (canvasY - this._offsetY) / this._scale;
 
 		return [worldX, worldY];
 	}
@@ -157,8 +157,8 @@ export class Viewport {
 	 * @param y - The y-coordinate in world space.
 	 */
 	public worldToCanvas(x: number, y: number): [number, number] {
-		const canvasX = x * this._scale + this._offsetX;
-		const canvasY = y * this._scale + this._offsetY;
+		const canvasX = (x * this._scale + this._offsetX) / this.whiteboard.ratio;
+		const canvasY = (y * this._scale + this._offsetY) / this.whiteboard.ratio;
 
 		return [canvasX, canvasY];
 	}
@@ -169,8 +169,8 @@ export class Viewport {
 	 * @param y - The y-coordinate in canvas space.
 	 */
 	public canvasToWorld(x: number, y: number): [number, number] {
-		const worldX = (x - this._offsetX) / this._scale;
-		const worldY = (y - this._offsetY) / this._scale;
+		const worldX = (x * this.whiteboard.ratio - this._offsetX) / this._scale;
+		const worldY = (y * this.whiteboard.ratio - this._offsetY) / this._scale;
 
 		return [worldX, worldY];
 	}

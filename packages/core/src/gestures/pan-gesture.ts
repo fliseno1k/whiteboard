@@ -2,14 +2,8 @@ import type { Whiteboard } from "../whiteboard";
 import { BaseGesture } from "./base-gesture";
 
 export class PanGesture extends BaseGesture {
-	/**
-	 * Current pointer event id
-	 */
 	private pointerId: number | null = null;
 
-	/**
-	 * Last pointer event coords
-	 */
 	private lastCoords: Array<number> = [0, 0];
 
 	constructor(whiteboard: Whiteboard) {

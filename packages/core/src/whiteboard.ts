@@ -44,9 +44,9 @@ export class Whiteboard {
 		const canvasElement = this.createCanvas();
 		this.holder.appendChild(canvasElement);
 
-		this.grid = new Grid({ size: 16, steps: 5, visible: true });
+		this.grid = new Grid(this, { size: 16, steps: 5, visible: true });
 		this.canvas = new Canvas(canvasElement, this.ratio);
-		this.viewport = new Viewport();
+		this.viewport = new Viewport(this);
 		this.eventManager = new EventManager(this);
 
 		this.eventManager.attatchEvents();
@@ -68,10 +68,19 @@ export class Whiteboard {
 	public render(): void {
 		requestAnimationFrame(() => {
 			this.cleaBackground();
-			this.grid.render({
-				canvas: this.canvas,
-				viewport: this.viewport,
-			});
+
+			this.grid.render();
+
+			this.canvas.context.save();
+			this.viewport.applyTransform();
+			this.canvas.setStyles({ strokeStyle: "#fff" });
+			// this.canvas.line(-4990, -4990, 4990, -4990);
+			this.canvas.line(-4950, 4990, -4950, -4990);
+			// this.canvas.line(4990, 4990, -4990, 4990);
+			// this.canvas.line(-4990, 4990, -4990, -4990);
+			this.canvas.context.restore();
+
+			console.log(this.viewport.offsetX);
 		});
 	}
 
@@ -92,6 +101,7 @@ export class Whiteboard {
 		canvasElement.tabIndex = 0;
 		canvasElement.style.outline = "none";
 		canvasElement.style.touchAction = "none";
+		canvasElement.style.imageRendering = "pixelated";
 
 		return canvasElement;
 	}

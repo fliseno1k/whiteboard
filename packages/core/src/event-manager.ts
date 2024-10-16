@@ -1,4 +1,4 @@
-import { type Gesture, PanGesture } from "./gestures";
+import { type Gesture, PanGesture, PinchGesture } from "./gestures";
 import { EVENT, noop } from "./utils";
 import { Whiteboard } from "./whiteboard";
 
@@ -26,18 +26,15 @@ export class EventManager {
 	 */
 	private readonly whiteboard: Whiteboard;
 
-	public constructor(whiteboard: Whiteboard) {
+	constructor(whiteboard: Whiteboard) {
 		this.whiteboard = whiteboard;
 
 		this.pointers = new Map();
 
-		this.gestures = [new PanGesture(whiteboard)];
+		this.gestures = [new PanGesture(whiteboard), new PinchGesture(whiteboard)];
 		this.activeGestures = new Set();
 	}
 
-	/**
-	 * Attach common events handlers
-	 */
 	public attatchEvents(): void {
 		const canvasElement = this.whiteboard.canvas.element;
 
@@ -47,15 +44,12 @@ export class EventManager {
 		canvasElement.addEventListener(EVENT.POINTER_CANCEL, this.handlePointerCancel);
 
 		canvasElement.addEventListener(EVENT.DOUBLE_CLICK, noop);
-		canvasElement.addEventListener(EVENT.WHEEL, noop, { passive: true });
+		canvasElement.addEventListener(EVENT.WHEEL, this.handleWheel, { passive: true });
 
 		canvasElement.addEventListener(EVENT.DRAG_OVER, noop);
 		canvasElement.addEventListener(EVENT.KEYDOWN, noop);
 	}
 
-	/**
-	 * Detach previously added events handlers
-	 */
 	public detachEvents(): void {
 		const canvasElement = this.whiteboard.canvas.element;
 
@@ -63,6 +57,8 @@ export class EventManager {
 		canvasElement.removeEventListener(EVENT.POINTER_MOVE, this.handlePointerMove);
 		canvasElement.removeEventListener(EVENT.POINTER_UP, this.handlePointerUp);
 		canvasElement.removeEventListener(EVENT.POINTER_CANCEL, this.handlePointerCancel);
+
+		canvasElement.removeEventListener(EVENT.WHEEL, this.handleWheel);
 	}
 
 	private handlePointerDown = (event: PointerEvent): void => {
@@ -111,6 +107,22 @@ export class EventManager {
 		this.handlePointerUp(event);
 	};
 
+	private handleWheel = (event: WheelEvent): void => {
+		if (event.ctrlKey || event.metaKey) {
+			const z = this.scaleFromWheelEvent(event);
+			const { clientX: x, clientY: y } = event;
+
+			this.whiteboard.viewport.zoomAtPoint(x, y, z);
+		} else {
+			const dx = -event.deltaX;
+			const dy = -event.deltaY;
+
+			this.whiteboard.viewport.translate(dx, dy);
+		}
+
+		this.whiteboard.render();
+	};
+
 	private proccessPointerEvent(event: PointerEvent): void {}
 
 	private isAnyGestureActive(): boolean {
@@ -121,5 +133,11 @@ export class EventManager {
 		this.activeGestures.clear();
 
 		this.gestures.forEach((gesture) => gesture.isActive && this.activeGestures.add(gesture));
+	}
+
+	private scaleFromWheelEvent(event: WheelEvent): number {
+		const zoomSensitivity = 0.01;
+
+		return Math.exp(-event.deltaY * zoomSensitivity);
 	}
 }
