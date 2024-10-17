@@ -1,4 +1,5 @@
-import { Whiteboard } from "./whiteboard";
+import type { CanvasStyleSheet } from "./canvas";
+import type { Whiteboard } from "./whiteboard";
 
 export type GridOptions = {
 	size: number;
@@ -13,7 +14,7 @@ export class Grid {
 	/**
 	 * Grid options
 	 */
-	private options: GridOptions;
+	private readonly options: GridOptions;
 
 	/**
 	 * Whiteboard instance
@@ -21,44 +22,34 @@ export class Grid {
 	private readonly whiteboard: Whiteboard;
 
 	public constructor(whiteboard: Whiteboard, options: GridOptions) {
-		this.whiteboard = whiteboard;
 		this.options = Object.assign({}, options);
+		this.whiteboard = whiteboard;
 	}
 
 	/**
 	 * Toggle grid visibility
 	 * @param next - is grid pattern should to be present
 	 */
-	public toggle(next: GridOptions["visible"]): void {
-		this.options.visible = next;
+	public toggle(visible: GridOptions["visible"]): void {
+		this.options.visible = visible;
 	}
 
 	/**
 	 * Render grid
 	 */
 	public render(): void {
-		if (!this.options.visible) {
-			return;
-		}
+		if (!this.options.visible) return;
 
-		this.renderGridPattern();
-	}
-
-	/**
-	 * Render grid pattern on canvas
-	 */
-	private renderGridPattern(): void {
 		const { canvas, viewport } = this.whiteboard;
-		const { size, steps } = this.options;
 
-		const offsetX = (viewport.offsetX % size) - size;
-		const offsetY = (viewport.offsetY % size) - size;
+		const [width, height] = canvas.size.map((v) => v / viewport.scale);
+		const [offsetX, offsetY] = viewport.offset.map((v) => v / viewport.scale);
 
-		const [width, height] = canvas.size;
+		const cellSize = this.options.size * this.options.steps;
+		const actualGridSize = this.options.size * viewport.scale;
 
-		const actualGridSize = size * viewport.scale;
-
-		const spaceWidth = 1 / viewport.scale;
+		const lineOffsetX = (offsetX % this.options.size) - this.options.size;
+		const lineOffsetY = (offsetY % this.options.size) - this.options.size;
 
 		canvas.context.save();
 		viewport.applyTransform();
@@ -69,59 +60,53 @@ export class Grid {
 			globalAlpha: 1.0,
 		});
 
-		let isBold = false;
+		for (let x = lineOffsetX; x < lineOffsetX + width; x += this.options.size) {
+			const isBold = Math.round(x - offsetX) % cellSize === 0;
 
-		this.setBoldStyles();
-
-		for (let x = -offsetX; x < offsetX + width + size; x += size) {
-			const isBold = steps > 1 && Math.round(x - scrollX) % (steps * size) === 0;
-			if (!isBold && actualGridSize < 10) {
+			if (!isBold && actualGridSize < 14) {
 				continue;
 			}
 
-			const lineWidth = Math.min(1 / viewport.scale, isBold ? 4 : 1);
-			const lineDash = [lineWidth * 3, spaceWidth + (lineWidth + spaceWidth)];
-			canvas.context.lineWidth = lineWidth;
-
-			canvas.setStyles({ lineDash: isBold ? [] : lineDash });
-
-			canvas.line(x, offsetY - size, x, Math.ceil(offsetY + height + size));
+			canvas.setStyles((isBold ? this.getBoldStyles : this.getNoneBoldStyles)(viewport.scale));
+			canvas.line(-offsetX + x, -offsetY, -offsetX + x, -offsetY + height);
 		}
 
-		// for (let y = 0; centerY + y < -vOffsetY + height + lineOffsetY; y += size) {
-		// 	const nextTopY = centerY - y - size;
-		// 	isBold = steps > 1 && nextTopY % cellSize === 0;
-		// 	lineBolding[+isBold]();
+		for (let y = lineOffsetY; y < lineOffsetY + height; y += this.options.size) {
+			const isBold = Math.round(y - offsetY) % cellSize === 0;
 
-		// 	canvas.line(-vOffsetX, nextTopY, Math.ceil(-vOffsetX + width), nextTopY);
+			if (!isBold && actualGridSize < 14) {
+				continue;
+			}
 
-		// 	const nextBottomY = centerY + y;
-		// 	isBold = steps > 1 && nextBottomY % cellSize === 0;
-		// 	lineBolding[+isBold]();
-
-		// 	canvas.line(-vOffsetX, nextBottomY, Math.ceil(-vOffsetX + width), nextBottomY);
-		// }
+			canvas.setStyles(isBold ? this.getBoldStyles(viewport.scale) : this.getNoneBoldStyles(viewport.scale));
+			canvas.line(-offsetX, -offsetY + y, -offsetX + width, -offsetY + y);
+		}
 
 		canvas.context.restore();
 	}
 
 	/**
-	 * Set canvas styles for bold line
+	 * Get canvas styles for bold grid line
 	 */
-	private setBoldStyles(): void {
-		this.whiteboard.canvas.setStyles({
-			strokeStyle: "#2d2d2d",
+	private getBoldStyles(scale: number): CanvasStyleSheet {
+		return {
 			lineDash: [],
-		});
+			lineWidth: Math.min(1 / scale, 1),
+			strokeStyle: "#243642",
+		};
 	}
 
 	/**
-	 * Set canvas styles for none-bold line
+	 * Get canvas styles for none-bold grid line
 	 */
-	private setNoneBoldStyles(): void {
-		this.whiteboard.canvas.setStyles({
-			strokeStyle: "#252423",
-			lineDash: [],
-		});
+	private getNoneBoldStyles(scale: number): CanvasStyleSheet {
+		const spaceWidth = 1 / scale;
+		const lineWidth = Math.min(1 / scale, 4);
+
+		return {
+			lineDash: [lineWidth * 3, spaceWidth + (lineWidth + spaceWidth)],
+			lineWidth,
+			strokeStyle: "#387478",
+		};
 	}
 }

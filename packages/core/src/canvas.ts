@@ -1,5 +1,11 @@
 import { invariant } from "./utils";
 
+export type CanvasStyleSheet = Partial<
+	Pick<CanvasRenderingContext2D, "lineCap" | "lineJoin" | "globalAlpha" | "strokeStyle" | "fillStyle" | "lineWidth"> & {
+		lineDash: Parameters<CanvasRenderingContext2D["setLineDash"]>[0];
+	}
+>;
+
 /**
  * Wrapper on top of native html canvas element
  */
@@ -35,13 +41,7 @@ export class Canvas {
 	/**
 	 * Set canvas styles
 	 */
-	public setStyles(
-		styleSheet: Partial<
-			Pick<CanvasRenderingContext2D, "lineCap" | "lineJoin" | "globalAlpha" | "strokeStyle" | "fillStyle"> & {
-				lineDash: Parameters<CanvasRenderingContext2D["setLineDash"]>[0];
-			}
-		>,
-	): Canvas {
+	public setStyles(styleSheet: CanvasStyleSheet): Canvas {
 		const { lineDash, ...styles } = styleSheet;
 
 		Object.assign(this.context, styles);
