@@ -1,6 +1,7 @@
-import { Canvas } from "./canvas";
-import { clamp, genClamp } from "./math";
+import { clamp } from "./math";
 import { Whiteboard } from "./whiteboard";
+
+export const MAX_OFFSET = 5000;
 
 /**
  * Encapsulates all the transformation logic required
@@ -11,69 +12,72 @@ export class Viewport {
 	/**
 	 * Horizontal translation offset
 	 */
-	private _offsetX: number;
+	private _offsetX!: number;
 
 	/**
 	 * Vertical translation offset
 	 */
-	private _offsetY: number;
+	private _offsetY!: number;
 
 	/**
 	 * Scaling factor
 	 */
-	private _scale: number;
-
-	/**
-	 * Clamp function for {@link _scale scale} argument
-	 */
-	private readonly clampScale: (value: number) => number;
+	private _scale!: number;
 
 	/**
 	 * Whiteboard instance
 	 */
 	private readonly whiteboard: Whiteboard;
 
-	public constructor(whiteboard: Whiteboard) {
-		this._scale = 1;
-		this._offsetX = 0;
-		this._offsetY = 0;
-
-		this.clampScale = genClamp(0.1, 10);
-
+	constructor(whiteboard: Whiteboard) {
 		this.whiteboard = whiteboard;
+
+		this.scale = 1;
+		this.offsetX = 0;
+		this.offsetY = 0;
 	}
 
 	/**
-	 * Get viewport horizontal translation offset
+	 * Get viewport the xy-direction offset
+	 */
+	public get offset(): Array<number> {
+		return [this._offsetX, this._offsetY];
+	}
+
+	/**
+	 * Get viewport the x-direction translation offset
 	 */
 	public get offsetX(): number {
 		return this._offsetX;
 	}
 
+	/**
+	 * Set viewport the x-direction translation offset
+	 */
 	public set offsetX(value: number) {
 		const [width] = this.whiteboard.canvas.size;
 
-		const minOffsetX = -5000 * this.scale + width;
-		const maxOffsetX = 5000 * this.scale;
+		const minOffsetX = -MAX_OFFSET * this.scale + width;
+		const maxOffsetX = MAX_OFFSET * this.scale;
 
 		this._offsetX = clamp(value, minOffsetX, maxOffsetX);
 	}
 
 	/**
-	 * Get viewport vertical translation offset
+	 * Get viewport the y-direction translation offset
 	 */
 	public get offsetY(): number {
 		return this._offsetY;
 	}
 
 	/**
-	 * Set viewport vertical translation offset
+	 * Set viewport the y-direction translation offset
 	 */
 	public set offsetY(value: number) {
 		const [_, height] = this.whiteboard.canvas.size;
 
-		const minOffsetY = -5000 * this.scale + height;
-		const maxOffsetY = 5000 * this.scale;
+		const minOffsetY = -MAX_OFFSET * this.scale + height;
+		const maxOffsetY = MAX_OFFSET * this.scale;
 
 		this._offsetY = clamp(value, minOffsetY, maxOffsetY);
 	}
@@ -89,7 +93,12 @@ export class Viewport {
 	 * Set viewport scale factor
 	 */
 	public set scale(value: number) {
-		this._scale = this.clampScale(value);
+		const [width, height] = this.whiteboard.canvas.size;
+
+		const minScaleX = width / (2 * MAX_OFFSET);
+		const minScaleY = height / (2 * MAX_OFFSET);
+
+		this._scale = clamp(value, Math.max(minScaleX, minScaleY), 10);
 	}
 
 	/**
@@ -129,8 +138,7 @@ export class Viewport {
 
 		const worldAfterZoom = this.screenToWorld(x, y);
 
-		this.offsetX += ((worldAfterZoom[0] - worldBeforeZoom[0]) * this._scale) / this.whiteboard.ratio;
-		this.offsetY += ((worldAfterZoom[1] - worldBeforeZoom[1]) * this._scale) / this.whiteboard.ratio;
+		this.translate(worldAfterZoom[0] - worldBeforeZoom[0], worldAfterZoom[1] - worldBeforeZoom[1]);
 	}
 
 	/**
@@ -142,11 +150,11 @@ export class Viewport {
 		const canvas = this.whiteboard.canvas;
 		const rect = canvas.element.getBoundingClientRect();
 
-		const canvasX = (x - rect.left) * this.whiteboard.ratio;
-		const canvasY = (y - rect.top) * this.whiteboard.ratio;
+		const canvasX = (x - rect.left) * this.whiteboard.ratio; // +
+		const canvasY = (y - rect.top) * this.whiteboard.ratio; // +
 
-		const worldX = (canvasX - this._offsetX) / this._scale;
-		const worldY = (canvasY - this._offsetY) / this._scale;
+		const worldX = canvasX / this.whiteboard.ratio / this._scale - this._offsetX;
+		const worldY = canvasY / this.whiteboard.ratio / this._scale - this._offsetX;
 
 		return [worldX, worldY];
 	}
