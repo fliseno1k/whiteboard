@@ -60,7 +60,8 @@ export class Viewport {
 		const minOffsetX = -MAX_OFFSET * this.scale + width;
 		const maxOffsetX = MAX_OFFSET * this.scale;
 
-		this._offsetX = clamp(value, minOffsetX, maxOffsetX);
+		// this._offsetX = clamp(value, minOffsetX, maxOffsetX);
+		this._offsetX = value;
 	}
 
 	/**
@@ -80,6 +81,7 @@ export class Viewport {
 		const maxOffsetY = MAX_OFFSET * this.scale;
 
 		this._offsetY = clamp(value, minOffsetY, maxOffsetY);
+		this._offsetY = value;
 	}
 
 	/**
@@ -98,21 +100,40 @@ export class Viewport {
 		const minScaleX = width / (2 * MAX_OFFSET);
 		const minScaleY = height / (2 * MAX_OFFSET);
 
-		this._scale = clamp(value, Math.max(minScaleX, minScaleY), 10);
+		// this._scale = clamp(value, Math.max(minScaleX, minScaleY), 10);
+		this._scale = value;
+	}
+
+	/**
+	 * All scaling transformations affecting canvas
+	 */
+	public get effectiveScale(): number {
+		return this.whiteboard.ratio * this._scale;
 	}
 
 	/**
 	 * Apply the current scale and translation to the canvas context.
 	 */
 	public applyTransform(): void {
-		this.whiteboard.canvas.context.setTransform(this._scale, 0, 0, this._scale, this._offsetX, this._offsetY);
+		const effectiveScale = this.effectiveScale;
+
+		this.whiteboard.canvas.context.setTransform(
+			effectiveScale,
+			0,
+			0,
+			effectiveScale,
+			this._offsetX * effectiveScale,
+			this._offsetY * effectiveScale,
+		);
 	}
 
 	/**
 	 * Reset the canvas transformation to the default state.
 	 */
 	public resetTransform(): void {
-		this.whiteboard.canvas.context.setTransform(1, 0, 0, 1, 0, 0);
+		const effectiveScale = this.whiteboard.ratio;
+
+		this.whiteboard.canvas.context.setTransform(effectiveScale, 0, 0, effectiveScale, 0, 0);
 	}
 
 	/**
@@ -134,7 +155,7 @@ export class Viewport {
 	public zoomAtPoint(x: number, y: number, scale: number): void {
 		const worldBeforeZoom = this.screenToWorld(x, y);
 
-		this.scale *= scale;
+		this.scale = scale;
 
 		const worldAfterZoom = this.screenToWorld(x, y);
 
@@ -150,11 +171,8 @@ export class Viewport {
 		const canvas = this.whiteboard.canvas;
 		const rect = canvas.element.getBoundingClientRect();
 
-		const canvasX = (x - rect.left) * this.whiteboard.ratio; // +
-		const canvasY = (y - rect.top) * this.whiteboard.ratio; // +
-
-		const worldX = canvasX / this.whiteboard.ratio / this._scale - this._offsetX;
-		const worldY = canvasY / this.whiteboard.ratio / this._scale - this._offsetX;
+		const worldX = (x - rect.left) / this._scale - this._offsetX;
+		const worldY = (y - rect.top) / this._scale - this._offsetY;
 
 		return [worldX, worldY];
 	}
