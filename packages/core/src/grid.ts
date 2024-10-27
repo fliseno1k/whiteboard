@@ -43,7 +43,7 @@ export class Grid {
 		const { canvas, viewport } = this.whiteboard;
 
 		const [width, height] = canvas.size.map((v) => v / viewport.scale);
-		const [offsetX, offsetY] = viewport.offset.map((v) => v / viewport.scale);
+		const [offsetX, offsetY] = viewport.offset;
 
 		const cellSize = this.options.size * this.options.steps;
 		const actualGridSize = this.options.size * viewport.scale;
@@ -63,7 +63,7 @@ export class Grid {
 		for (let x = lineOffsetX; x < lineOffsetX + width; x += this.options.size) {
 			const isBold = Math.round(x - offsetX) % cellSize === 0;
 
-			if (!isBold && actualGridSize < 14) {
+			if (!isBold && actualGridSize < 10) {
 				continue;
 			}
 
@@ -74,11 +74,11 @@ export class Grid {
 		for (let y = lineOffsetY; y < lineOffsetY + height; y += this.options.size) {
 			const isBold = Math.round(y - offsetY) % cellSize === 0;
 
-			if (!isBold && actualGridSize < 14) {
+			if (!isBold && actualGridSize < 10) {
 				continue;
 			}
 
-			canvas.setStyles(isBold ? this.getBoldStyles(viewport.scale) : this.getNoneBoldStyles(viewport.scale));
+			canvas.setStyles((isBold ? this.getBoldStyles : this.getNoneBoldStyles)(viewport.scale));
 			canvas.line(-offsetX, -offsetY + y, -offsetX + width, -offsetY + y);
 		}
 
@@ -92,7 +92,7 @@ export class Grid {
 		return {
 			lineDash: [],
 			lineWidth: Math.min(1 / scale, 1),
-			strokeStyle: "#243642",
+			strokeStyle: "#5B5B5B",
 		};
 	}
 
@@ -106,7 +106,7 @@ export class Grid {
 		return {
 			lineDash: [lineWidth * 3, spaceWidth + (lineWidth + spaceWidth)],
 			lineWidth,
-			strokeStyle: "#387478",
+			strokeStyle: "#212121",
 		};
 	}
 }

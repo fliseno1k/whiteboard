@@ -67,27 +67,15 @@ export class Whiteboard {
 	 */
 	public render(): void {
 		requestAnimationFrame(() => {
-			this.cleaBackground();
-
+			this.clearCanvas();
 			this.grid.render();
-
-			this.canvas.context.save();
-			this.viewport.applyTransform();
-			this.canvas.setStyles({ strokeStyle: "#fff" });
-			// this.canvas.line(-4990, -4990, 4990, -4990);
-			this.canvas.line(-4950, 4990, -4950, -4990);
-			// this.canvas.line(4990, 4990, -4990, 4990);
-			// this.canvas.line(-4990, 4990, -4990, -4990);
-			this.canvas.context.restore();
-
-			console.log(this.viewport.offsetX);
 		});
 	}
 
 	/**
-	 *
+	 * Clear canvas
 	 */
-	private cleaBackground(): void {
+	private clearCanvas(): void {
 		this.canvas.context.fillStyle = "#1b1715";
 		this.canvas.context.fillRect(0, 0, ...this.canvas.size);
 	}

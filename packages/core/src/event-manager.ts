@@ -44,7 +44,7 @@ export class EventManager {
 		canvasElement.addEventListener(EVENT.POINTER_CANCEL, this.handlePointerCancel);
 
 		canvasElement.addEventListener(EVENT.DOUBLE_CLICK, noop);
-		canvasElement.addEventListener(EVENT.WHEEL, this.handleWheel, { passive: true });
+		canvasElement.addEventListener(EVENT.WHEEL, this.handleWheel, { passive: false });
 
 		canvasElement.addEventListener(EVENT.DRAG_OVER, noop);
 		canvasElement.addEventListener(EVENT.KEYDOWN, noop);
@@ -108,16 +108,15 @@ export class EventManager {
 	};
 
 	private handleWheel = (event: WheelEvent): void => {
+		event.preventDefault();
+
 		if (event.ctrlKey || event.metaKey) {
 			const z = this.scaleFromWheelEvent(event);
 			const { clientX: x, clientY: y } = event;
 
 			this.whiteboard.viewport.zoomAtPoint(x, y, z);
 		} else {
-			const dx = -event.deltaX;
-			const dy = -event.deltaY;
-
-			this.whiteboard.viewport.translate(dx, dy);
+			this.whiteboard.viewport.translate(-event.deltaX, -event.deltaY);
 		}
 
 		this.whiteboard.render();
@@ -136,8 +135,22 @@ export class EventManager {
 	}
 
 	private scaleFromWheelEvent(event: WheelEvent): number {
-		const zoomSensitivity = 0.01;
+		const { deltaY } = event;
 
-		return Math.exp(-event.deltaY * zoomSensitivity);
+		const sign = Math.sign(deltaY);
+		const MAX_STEP = 0.1 * 100;
+		const absDelta = Math.abs(deltaY);
+		let delta = deltaY;
+
+		if (absDelta > MAX_STEP) {
+			delta = MAX_STEP * sign;
+		}
+
+		const scale =
+			this.whiteboard.viewport.scale -
+			delta / 100 +
+			Math.log10(Math.max(1, this.whiteboard.viewport.scale)) * -sign * Math.min(1, absDelta / 20);
+
+		return scale;
 	}
 }
