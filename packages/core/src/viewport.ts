@@ -3,6 +3,10 @@ import { Whiteboard } from "./whiteboard";
 
 export const MAX_OFFSET = 5000;
 
+export const MIN_SCALE = 0.01;
+
+export const MAX_SCALE = 10;
+
 /**
  * Encapsulates all the transformation logic required
  * for panning (translation) and zooming (scaling),
@@ -80,7 +84,7 @@ export class Viewport {
 		const minOffsetY = -MAX_OFFSET * this.scale + height;
 		const maxOffsetY = MAX_OFFSET * this.scale;
 
-		this._offsetY = clamp(value, minOffsetY, maxOffsetY);
+		// this._offsetY = clamp(value, minOffsetY, maxOffsetY);
 		this._offsetY = value;
 	}
 
@@ -95,13 +99,7 @@ export class Viewport {
 	 * Set viewport scale factor
 	 */
 	public set scale(value: number) {
-		const [width, height] = this.whiteboard.canvas.size;
-
-		const minScaleX = width / (2 * MAX_OFFSET);
-		const minScaleY = height / (2 * MAX_OFFSET);
-
-		// this._scale = clamp(value, Math.max(minScaleX, minScaleY), 10);
-		this._scale = value;
+		this._scale = clamp(value, MIN_SCALE, MAX_SCALE);
 	}
 
 	/**

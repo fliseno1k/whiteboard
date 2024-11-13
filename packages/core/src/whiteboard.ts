@@ -44,7 +44,7 @@ export class Whiteboard {
 		const canvasElement = this.createCanvas();
 		this.holder.appendChild(canvasElement);
 
-		this.grid = new Grid(this, { size: 16, steps: 5, visible: true });
+		this.grid = new Grid(this, { size: 32, steps: 4, visible: true });
 		this.canvas = new Canvas(canvasElement, this.ratio);
 		this.viewport = new Viewport(this);
 		this.eventManager = new EventManager(this);
