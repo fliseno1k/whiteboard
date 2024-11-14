@@ -6,6 +6,11 @@ export type CanvasStyleSheet = Partial<
 	}
 >;
 
+export type Dimension = {
+	width: number;
+	height: number;
+};
+
 /**
  * Wrapper on top of native html canvas element
  */
@@ -20,22 +25,42 @@ export class Canvas {
 	 */
 	public readonly context: CanvasRenderingContext2D;
 
-	public constructor(element: HTMLCanvasElement, ratio: number) {
-		this.element = element;
+	/**
+	 * Canvas memoized bounding rect
+	 */
+	private memoBoundingRect: DOMRect;
 
+	/**
+	 * Canvas memoized DPR size
+	 */
+	private memoDPRSize: Dimension;
+
+	public constructor(element: HTMLCanvasElement) {
 		let _context = element.getContext("2d");
 		invariant(_context, "Failed to get 2D context from canvas");
 
 		this.context = _context;
+		this.element = element;
+
+		this.memoBoundingRect = this.element.getBoundingClientRect();
+		this.memoDPRSize = {
+			width: this.element.width,
+			height: this.element.height,
+		};
 	}
 
 	/**
-	 * Returns size of canvas dom element
+	 * Measure html canvas element bounding rect
 	 */
-	public get size(): [number, number] {
-		const { width, height } = this.element;
+	public measureBoundingRect(): Readonly<DOMRect> {
+		return this.memoBoundingRect;
+	}
 
-		return [width, height];
+	/**
+	 * Measure html canvas element DPR size
+	 */
+	public measureDPRSize(): Readonly<Dimension> {
+		return this.memoDPRSize;
 	}
 
 	/**
@@ -56,11 +81,15 @@ export class Canvas {
 	/**
 	 * Resize native canvas html element
 	 */
-	public resize(width: number, height: number, ratio: number): void {
-		this.element.width = Math.floor(width * ratio);
-		this.element.height = Math.floor(height * ratio);
+	public resize(width: number, height: number, dpr: number): void {
+		this.element.width = Math.floor(width * dpr);
+		this.element.height = Math.floor(height * dpr);
 		this.element.style.width = width + "px";
 		this.element.style.height = height + "px";
+
+		this.memoBoundingRect = this.element.getBoundingClientRect();
+		this.memoDPRSize.width = this.element.width;
+		this.memoDPRSize.height = this.element.height;
 	}
 
 	/**

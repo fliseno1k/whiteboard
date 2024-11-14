@@ -3,9 +3,9 @@ import { EVENT, noop } from "./utils";
 import { Whiteboard } from "./whiteboard";
 
 /**
- * Manage event handling and work delegation to current editor tools
+ * A surface where user interactions are detected and processed
  */
-export class EventManager {
+export class InputSurface {
 	/**
 	 * Active pointer events set
 	 */
@@ -26,42 +26,59 @@ export class EventManager {
 	 */
 	private readonly whiteboard: Whiteboard;
 
+	/**
+	 * Abort signal
+	 */
+	private abortController: AbortController | null;
+
 	constructor(whiteboard: Whiteboard) {
 		this.whiteboard = whiteboard;
 
 		this.pointers = new Map();
-
 		this.gestures = [new PanGesture(whiteboard), new PinchGesture(whiteboard)];
 		this.activeGestures = new Set();
+		this.abortController = null;
 	}
 
-	public attatchEvents(): void {
-		const canvasElement = this.whiteboard.canvas.element;
+	public connect(): void {
+		const element = this.whiteboard.canvas.element;
 
-		canvasElement.addEventListener(EVENT.POINTER_DOWN, this.handlePointerDown);
-		canvasElement.addEventListener(EVENT.POINTER_MOVE, this.handlePointerMove);
-		canvasElement.addEventListener(EVENT.POINTER_UP, this.handlePointerUp);
-		canvasElement.addEventListener(EVENT.POINTER_CANCEL, this.handlePointerCancel);
+		if (!this.abortController || this.abortController.signal.aborted) {
+			this.abortController = new AbortController();
+		}
 
-		canvasElement.addEventListener(EVENT.DOUBLE_CLICK, noop);
-		canvasElement.addEventListener(EVENT.WHEEL, this.handleWheel, { passive: false });
-
-		canvasElement.addEventListener(EVENT.DRAG_OVER, noop);
-		canvasElement.addEventListener(EVENT.KEYDOWN, noop);
+		element.addEventListener(EVENT.POINTER_DOWN, this.handlePointerDown.bind(this), {
+			signal: this.abortController?.signal,
+		});
+		element.addEventListener(EVENT.POINTER_MOVE, this.handlePointerMove.bind(this), {
+			signal: this.abortController?.signal,
+		});
+		element.addEventListener(EVENT.POINTER_UP, this.handlePointerUp.bind(this), {
+			signal: this.abortController?.signal,
+		});
+		element.addEventListener(EVENT.POINTER_CANCEL, this.handlePointerCancel.bind(this), {
+			signal: this.abortController?.signal,
+		});
+		element.addEventListener(EVENT.DOUBLE_CLICK, noop, {
+			signal: this.abortController?.signal,
+		});
+		element.addEventListener(EVENT.WHEEL, this.handleWheel.bind(this), {
+			passive: false,
+			signal: this.abortController?.signal,
+		});
+		element.addEventListener(EVENT.DRAG_OVER, noop, {
+			signal: this.abortController?.signal,
+		});
+		element.addEventListener(EVENT.KEYDOWN, noop, {
+			signal: this.abortController?.signal,
+		});
 	}
 
-	public detachEvents(): void {
-		const canvasElement = this.whiteboard.canvas.element;
-
-		canvasElement.removeEventListener(EVENT.POINTER_DOWN, this.handlePointerDown);
-		canvasElement.removeEventListener(EVENT.POINTER_MOVE, this.handlePointerMove);
-		canvasElement.removeEventListener(EVENT.POINTER_UP, this.handlePointerUp);
-		canvasElement.removeEventListener(EVENT.POINTER_CANCEL, this.handlePointerCancel);
-
-		canvasElement.removeEventListener(EVENT.WHEEL, this.handleWheel);
+	public disconnect(): void {
+		this.abortController?.abort();
 	}
 
-	private handlePointerDown = (event: PointerEvent): void => {
+	private handlePointerDown(event: PointerEvent): void {
 		event.preventDefault();
 
 		this.pointers.set(event.pointerId, event);
@@ -73,9 +90,9 @@ export class EventManager {
 		if (this.isAnyGestureActive()) return;
 
 		this.proccessPointerEvent(event);
-	};
+	}
 
-	private handlePointerMove = (event: PointerEvent): void => {
+	private handlePointerMove(event: PointerEvent): void {
 		event.preventDefault();
 
 		if (!this.pointers.has(event.pointerId)) return;
@@ -87,9 +104,9 @@ export class EventManager {
 		if (this.isAnyGestureActive()) return;
 
 		this.proccessPointerEvent(event);
-	};
+	}
 
-	private handlePointerUp = (event: PointerEvent): void => {
+	private handlePointerUp(event: PointerEvent): void {
 		event.preventDefault();
 
 		this.pointers.delete(event.pointerId);
@@ -101,13 +118,13 @@ export class EventManager {
 		if (this.isAnyGestureActive()) return;
 
 		this.proccessPointerEvent(event);
-	};
+	}
 
-	private handlePointerCancel = (event: PointerEvent): void => {
+	private handlePointerCancel(event: PointerEvent): void {
 		this.handlePointerUp(event);
-	};
+	}
 
-	private handleWheel = (event: WheelEvent): void => {
+	private handleWheel(event: WheelEvent): void {
 		event.preventDefault();
 
 		if (event.ctrlKey || event.metaKey) {
@@ -120,7 +137,7 @@ export class EventManager {
 		}
 
 		this.whiteboard.render();
-	};
+	}
 
 	private proccessPointerEvent(event: PointerEvent): void {}
 

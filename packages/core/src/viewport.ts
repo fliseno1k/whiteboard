@@ -59,7 +59,7 @@ export class Viewport {
 	 * Set viewport the x-direction translation offset
 	 */
 	public set offsetX(value: number) {
-		const [width] = this.whiteboard.canvas.size;
+		const { width } = this.whiteboard.canvas.measureDPRSize();
 
 		const minOffsetX = -MAX_OFFSET * this.scale + width;
 		const maxOffsetX = MAX_OFFSET * this.scale;
@@ -79,7 +79,7 @@ export class Viewport {
 	 * Set viewport the y-direction translation offset
 	 */
 	public set offsetY(value: number) {
-		const [_, height] = this.whiteboard.canvas.size;
+		const { height } = this.whiteboard.canvas.measureDPRSize();
 
 		const minOffsetY = -MAX_OFFSET * this.scale + height;
 		const maxOffsetY = MAX_OFFSET * this.scale;

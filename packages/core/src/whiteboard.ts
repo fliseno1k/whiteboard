@@ -1,6 +1,6 @@
 import { Canvas } from "./canvas";
-import { EventManager } from "./event-manager";
 import { Grid } from "./grid";
+import { InputSurface } from "./input-surface";
 import { Viewport } from "./viewport";
 
 export class Whiteboard {
@@ -32,7 +32,7 @@ export class Whiteboard {
 	/**
 	 * Canvas events manager
 	 */
-	private readonly eventManager: EventManager;
+	private readonly inputSurface: InputSurface;
 
 	/**
 	 * @param editorHolder - element into which canvas will be putted
@@ -44,12 +44,19 @@ export class Whiteboard {
 		const canvasElement = this.createCanvas();
 		this.holder.appendChild(canvasElement);
 
-		this.grid = new Grid(this, { size: 32, steps: 4, visible: true });
-		this.canvas = new Canvas(canvasElement, this.ratio);
+		this.canvas = new Canvas(canvasElement);
 		this.viewport = new Viewport(this);
-		this.eventManager = new EventManager(this);
+		this.inputSurface = new InputSurface(this);
 
-		this.eventManager.attatchEvents();
+		this.grid = new Grid(this, { size: 128, steps: 4, visible: true });
+	}
+
+	public enable(): void {
+		this.inputSurface.connect();
+	}
+
+	public disable(): void {
+		this.inputSurface.disconnect();
 	}
 
 	/**
@@ -76,8 +83,10 @@ export class Whiteboard {
 	 * Clear canvas
 	 */
 	private clearCanvas(): void {
+		const { width, height } = this.canvas.measureDPRSize();
+
 		this.canvas.context.fillStyle = "#1b1715";
-		this.canvas.context.fillRect(0, 0, ...this.canvas.size);
+		this.canvas.context.fillRect(0, 0, width, height);
 	}
 
 	/**

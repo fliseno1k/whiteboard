@@ -55,7 +55,10 @@ export class Grid {
 
 		const { canvas, viewport } = this.whiteboard;
 
-		const [width, height] = canvas.size.map((v) => Math.round(v / viewport.scale));
+		const canvasDPRSize = canvas.measureDPRSize();
+		const [width, height] = [canvasDPRSize.width, canvasDPRSize.height].map((value) =>
+			Math.round(value / viewport.scale),
+		);
 		const [offsetX, offsetY] = viewport.offset.map(Math.round);
 
 		const actualGridSize = this.options.size * viewport.scale;
