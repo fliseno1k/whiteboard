@@ -1,5 +1,5 @@
 import { type Gesture, PanGesture, PinchGesture } from "./gestures";
-import { EVENT, noop } from "./utils";
+import { EventType, noop } from "./utils";
 import { Whiteboard } from "./whiteboard";
 
 /**
@@ -41,37 +41,20 @@ export class InputSurface {
 	}
 
 	public connect(): void {
+		this.abortController?.abort();
+		this.abortController = new AbortController();
+
 		const element = this.whiteboard.canvas.element;
+		const signal = this.abortController.signal;
 
-		if (!this.abortController || this.abortController.signal.aborted) {
-			this.abortController = new AbortController();
-		}
-
-		element.addEventListener(EVENT.POINTER_DOWN, this.handlePointerDown.bind(this), {
-			signal: this.abortController?.signal,
-		});
-		element.addEventListener(EVENT.POINTER_MOVE, this.handlePointerMove.bind(this), {
-			signal: this.abortController?.signal,
-		});
-		element.addEventListener(EVENT.POINTER_UP, this.handlePointerUp.bind(this), {
-			signal: this.abortController?.signal,
-		});
-		element.addEventListener(EVENT.POINTER_CANCEL, this.handlePointerCancel.bind(this), {
-			signal: this.abortController?.signal,
-		});
-		element.addEventListener(EVENT.DOUBLE_CLICK, noop, {
-			signal: this.abortController?.signal,
-		});
-		element.addEventListener(EVENT.WHEEL, this.handleWheel.bind(this), {
-			passive: false,
-			signal: this.abortController?.signal,
-		});
-		element.addEventListener(EVENT.DRAG_OVER, noop, {
-			signal: this.abortController?.signal,
-		});
-		element.addEventListener(EVENT.KEYDOWN, noop, {
-			signal: this.abortController?.signal,
-		});
+		element.addEventListener(EventType.DOUBLE_CLICK, noop, { signal });
+		element.addEventListener(EventType.DRAG_OVER, noop, { signal });
+		element.addEventListener(EventType.KEY_DOWN, noop, { signal });
+		element.addEventListener(EventType.POINTER_CANCEL, this.handlePointerCancel.bind(this), { signal });
+		element.addEventListener(EventType.POINTER_DOWN, this.handlePointerDown.bind(this), { signal });
+		element.addEventListener(EventType.POINTER_MOVE, this.handlePointerMove.bind(this), { signal });
+		element.addEventListener(EventType.POINTER_UP, this.handlePointerUp.bind(this), { signal });
+		element.addEventListener(EventType.WHEEL, this.handleWheel.bind(this), { passive: false, signal });
 	}
 
 	public disconnect(): void {
@@ -133,7 +116,7 @@ export class InputSurface {
 
 			this.whiteboard.viewport.zoomAtPoint(x, y, z);
 		} else {
-			this.whiteboard.viewport.translate(-event.deltaX, -event.deltaY);
+			this.whiteboard.viewport.translateBy(-event.deltaX, -event.deltaY);
 		}
 
 		this.whiteboard.render();

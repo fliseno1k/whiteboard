@@ -37,7 +37,7 @@ export class PinchGesture extends BaseGesture {
 		const [first, second] = this.pointers.values();
 		const midpoint = this.getMidpoint(first, second);
 
-		this.whiteboard.viewport.translate(midpoint[0] - this.initialMidpoint[0], midpoint[1] - this.initialMidpoint[1]);
+		this.whiteboard.viewport.translateBy(midpoint[0] - this.initialMidpoint[0], midpoint[1] - this.initialMidpoint[1]);
 		this.whiteboard.render();
 	}
 

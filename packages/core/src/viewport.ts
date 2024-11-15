@@ -1,8 +1,6 @@
 import { clamp } from "./math";
 import { Whiteboard } from "./whiteboard";
 
-export const MAX_OFFSET = 5000;
-
 export const MIN_SCALE = 0.01;
 
 export const MAX_SCALE = 10;
@@ -59,12 +57,6 @@ export class Viewport {
 	 * Set viewport the x-direction translation offset
 	 */
 	public set offsetX(value: number) {
-		const { width } = this.whiteboard.canvas.measureDPRSize();
-
-		const minOffsetX = -MAX_OFFSET * this.scale + width;
-		const maxOffsetX = MAX_OFFSET * this.scale;
-
-		// this._offsetX = clamp(value, minOffsetX, maxOffsetX);
 		this._offsetX = value;
 	}
 
@@ -79,12 +71,6 @@ export class Viewport {
 	 * Set viewport the y-direction translation offset
 	 */
 	public set offsetY(value: number) {
-		const { height } = this.whiteboard.canvas.measureDPRSize();
-
-		const minOffsetY = -MAX_OFFSET * this.scale + height;
-		const maxOffsetY = MAX_OFFSET * this.scale;
-
-		// this._offsetY = clamp(value, minOffsetY, maxOffsetY);
 		this._offsetY = value;
 	}
 
@@ -139,7 +125,7 @@ export class Viewport {
 	 * @param dx - amount to translate in the x-direction
 	 * @param dy - amount to translate in the y-direction
 	 */
-	public translate(dx: number, dy: number): void {
+	public translateBy(dx: number, dy: number): void {
 		this.offsetX += dx;
 		this.offsetY += dy;
 	}
@@ -157,7 +143,7 @@ export class Viewport {
 
 		const worldAfterZoom = this.screenToWorld(x, y);
 
-		this.translate(worldAfterZoom[0] - worldBeforeZoom[0], worldAfterZoom[1] - worldBeforeZoom[1]);
+		this.translateBy(worldAfterZoom[0] - worldBeforeZoom[0], worldAfterZoom[1] - worldBeforeZoom[1]);
 	}
 
 	/**

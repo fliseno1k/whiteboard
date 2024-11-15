@@ -30,7 +30,7 @@ export class PanGesture extends BaseGesture {
 
 		this.lastCoords = [offsetX, offsetY];
 
-		this.whiteboard.viewport.translate(deltaX, deltaY);
+		this.whiteboard.viewport.translateBy(deltaX, deltaY);
 		this.whiteboard.render();
 
 		// TODO: update cursor

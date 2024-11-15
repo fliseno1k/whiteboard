@@ -8,4 +8,5 @@ if (!holder) {
 }
 
 const whiteboard = new Whiteboard(holder as HTMLDivElement);
-whiteboard.fit();
+whiteboard.fitParent();
+whiteboard.enable();

@@ -7,7 +7,7 @@ export class Whiteboard {
 	/**
 	 * Editor root html element
 	 */
-	public readonly holder: HTMLElement;
+	public readonly parent: HTMLElement;
 
 	/**
 	 * Pixel ratio value
@@ -35,14 +35,14 @@ export class Whiteboard {
 	private readonly inputSurface: InputSurface;
 
 	/**
-	 * @param editorHolder - element into which canvas will be putted
+	 * @param parent - element into which canvas will be putted
 	 */
-	public constructor(editorHolder: HTMLElement) {
-		this.holder = editorHolder;
+	public constructor(parent: HTMLElement) {
+		this.parent = parent;
 		this.ratio = window.devicePixelRatio || 1;
 
 		const canvasElement = this.createCanvas();
-		this.holder.appendChild(canvasElement);
+		this.parent.appendChild(canvasElement);
 
 		this.canvas = new Canvas(canvasElement);
 		this.viewport = new Viewport(this);
@@ -62,8 +62,8 @@ export class Whiteboard {
 	/**
 	 * Fit editor (canvas) size to the holder (parent) element
 	 */
-	public fit(): void {
-		const rect = this.holder.getBoundingClientRect();
+	public fitParent(): void {
+		const rect = this.parent.getBoundingClientRect();
 		this.canvas.resize(rect.width, rect.height, this.ratio);
 
 		this.render();
