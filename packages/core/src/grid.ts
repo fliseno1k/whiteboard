@@ -8,6 +8,11 @@ export type GridOptions = {
 	visible: boolean;
 };
 
+export type GridPreset = {
+	scaleTreshold: number;
+	spaceMultiplier: number;
+};
+
 /**
  * Draws canvas grid
  */
@@ -22,21 +27,13 @@ export class Grid {
 	 */
 	private readonly whiteboard: Whiteboard;
 
-	private readonly gridSpacing: Array<unknown>;
+	private readonly gridPresets: Array<GridPreset>;
 
 	public constructor(whiteboard: Whiteboard, options: GridOptions) {
 		this.options = Object.assign({}, options);
 		this.whiteboard = whiteboard;
 
-		this.gridSpacing = [
-			{ threshold: 0, multiplier: 4 * 4 * 4 },
-			{ threshold: 1, multiplier: 4 * 4 * 4 },
-			{ threshold: 4, multiplier: 4 * 4 },
-			{ threshold: 8, multiplier: 4 },
-			{ threshold: 32, multiplier: 1 },
-			{ threshold: 32 * 4, multiplier: 0.25 },
-			{ threshold: 32 * 4 * 4, multiplier: 0.25 / 4 },
-		];
+		this.gridPresets = this.computeGridPresets(MIN_SCALE, MAX_SCALE, this.options.steps, 1);
 	}
 
 	/**
@@ -61,15 +58,13 @@ export class Grid {
 		);
 		const [offsetX, offsetY] = viewport.offset.map(Math.round);
 
-		const actualGridSize = this.options.size * viewport.scale;
-
-		const sizingPreset = this.gridSpacing.find((preset) => preset.threshold >= actualGridSize)!;
-		const adaptiveSize = this.options.size * sizingPreset.multiplier;
+		const sizingPreset = this.gridPresets.find((preset) => preset.scaleTreshold >= viewport.scale)!;
+		const adaptiveSize = this.options.size * sizingPreset.spaceMultiplier;
 		const cellSize = this.options.steps * adaptiveSize;
 
 		const lineOffsetX = (offsetX % adaptiveSize) - adaptiveSize;
 		const lineOffsetY = (offsetY % adaptiveSize) - adaptiveSize;
-		const lineOpacity = this.calculateGridLevelOpacity(actualGridSize, sizingPreset.threshold, 0, 1);
+		const lineOpacity = this.calculateGridLevelOpacity(viewport.scale, sizingPreset.scaleTreshold, 0, 1);
 
 		canvas.context.save();
 		canvas.setStyles({
@@ -113,5 +108,41 @@ export class Grid {
 		const opacity = clamp(normalizedScale, minOpacity, maxOpacity);
 
 		return opacity;
+	}
+
+	private computeGridPresets(min: number, max: number, steps: number, initialScale: number = 1): Array<GridPreset> {
+		const left: Array<GridPreset> = [];
+		const right: Array<GridPreset> = [
+			{
+				scaleTreshold: 1,
+				spaceMultiplier: 1,
+			},
+		];
+
+		let powerLeft = 0;
+		let prevScaleLeft = initialScale;
+		while (prevScaleLeft > min) {
+			powerLeft -= 1;
+			prevScaleLeft = steps ** powerLeft;
+
+			left.push({
+				scaleTreshold: prevScaleLeft,
+				spaceMultiplier: steps ** Math.abs(powerLeft),
+			});
+		}
+
+		let powerRight = 0;
+		let prevScaleRight = initialScale;
+		while (prevScaleRight < max) {
+			powerRight += 1;
+			prevScaleRight = steps ** powerRight;
+
+			right.push({
+				scaleTreshold: prevScaleRight,
+				spaceMultiplier: 1 / steps ** powerRight,
+			});
+		}
+
+		return left.reverse().concat(right);
 	}
 }
