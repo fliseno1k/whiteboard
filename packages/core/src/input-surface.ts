@@ -138,18 +138,12 @@ export class InputSurface {
 		const { deltaY } = event;
 
 		const sign = Math.sign(deltaY);
-		const MAX_STEP = 0.1 * 100;
 		const absDelta = Math.abs(deltaY);
-		let delta = deltaY;
-
-		if (absDelta > MAX_STEP) {
-			delta = MAX_STEP * sign;
-		}
 
 		const scale =
 			this.whiteboard.viewport.scale -
-			delta / 100 +
-			Math.log10(Math.max(1, this.whiteboard.viewport.scale)) * -sign * Math.min(1, absDelta / 20);
+			deltaY / 100 +
+			Math.log10(Math.max(1, this.whiteboard.viewport.scale)) * -sign * Math.min(1, absDelta / 100);
 
 		return scale;
 	}
