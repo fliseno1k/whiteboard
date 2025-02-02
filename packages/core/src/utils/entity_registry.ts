@@ -1,8 +1,6 @@
 import { type UID, uid } from "./unique_id";
 
-/**
- * Manages the registration and unregistration of entities.
- */
+/** Manages the registration and unregistration of entities. */
 export class Registry<Entity> {
 	/** Registered {@link Entity | entities} pool */
 	private readonly pool: Map<UID, Entity> = new Map();
@@ -26,9 +24,7 @@ export class Registry<Entity> {
 		return this.pool.delete(entityUID);
 	}
 
-	/**
-	 * Returns an iterator that iterates over the entities in the pool.
-	 */
+	/** Returns an iterator that iterates over the entities in the pool. */
 	*[Symbol.iterator](): IterableIterator<Entity> {
 		for (const [_, entity] of this.pool) {
 			yield entity;

@@ -30,7 +30,7 @@ export class InteractionEngine implements Dispatchable {
 	}
 
 	/** Register gesture */
-	public registerGesture(gesture: Gesture): GestureUID {
+	public registerGesture(gesture: Gesture): UID {
 		return this.gesturesRegistry.register(gesture);
 	}
 
@@ -40,18 +40,18 @@ export class InteractionEngine implements Dispatchable {
 	}
 
 	/** Register gesture */
-	public registerPlugin(plugin: Plugin): PluginUID {
+	public registerPlugin(plugin: Plugin): UID {
 		return this.pluginsRegistry.register(plugin);
 	}
 
 	/** Unregister gesture */
-	public unregisterPlugin(pluginUID: PluginUID): boolean {
+	public unregisterPlugin(pluginUID: UID): boolean {
 		return this.pluginsRegistry.unregister(pluginUID);
 	}
 
 	/**
 	 * Process gestures
-	 * @returns true if any gestures is active
+	 * @returns true if any gesture is active
 	 */
 	private processGestures(event: Event): boolean {
 		if (!this.isPointerEvent(event)) {
@@ -79,6 +79,3 @@ export class InteractionEngine implements Dispatchable {
 		return event instanceof PointerEvent;
 	}
 }
-
-type PluginUID = UID;
-type GestureUID = UID;
