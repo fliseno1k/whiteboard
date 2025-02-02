@@ -1,4 +1,5 @@
 import type { Whiteboard } from "../../whiteboard";
+import { NativeEventType } from "../event_type";
 import { Gesture } from "./gesture";
 
 export class PanGesture extends Gesture {
@@ -6,13 +7,21 @@ export class PanGesture extends Gesture {
 
 	private lastCoords: Array<number> = [0, 0];
 
+	private readonly eventSwitchMap: Record<PointerEvent["type"], (event: PointerEvent) => void> = {
+		[NativeEventType.POINTERDOWN]: this.onPointerDown,
+		[NativeEventType.POINTERMOVE]: this.onPointerMove,
+		[NativeEventType.POINTERUP]: this.onPointerUp,
+	};
+
 	constructor(whiteboard: Whiteboard) {
 		super(whiteboard);
 	}
 
-	public onEvent(event: PointerEvent): void {}
+	public onEvent(event: PointerEvent): void {
+		this.eventSwitchMap[event.type]?.(event);
+	}
 
-	public onPointerDown(event: PointerEvent): void {
+	private onPointerDown(event: PointerEvent): void {
 		if (!this.shouldStartPanning(event)) return;
 
 		this._isActive = true;
@@ -22,7 +31,7 @@ export class PanGesture extends Gesture {
 		// TODO: update cursor
 	}
 
-	public onPointerMove(event: PointerEvent): void {
+	private onPointerMove(event: PointerEvent): void {
 		if (!this.isActive || event.pointerId !== this.pointerId) return;
 
 		const { offsetX, offsetY } = event;
@@ -38,7 +47,7 @@ export class PanGesture extends Gesture {
 		// TODO: update cursor
 	}
 
-	public onPointerUp(event: PointerEvent): void {
+	private onPointerUp(event: PointerEvent): void {
 		if (this._isActive && event.pointerId === this.pointerId) {
 			this.reset();
 		}

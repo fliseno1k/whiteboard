@@ -1,10 +1,13 @@
 import type { Whiteboard } from "../../whiteboard";
 
+/** Provides a contract for gesture handling logic. */
 export abstract class Gesture {
+	/** Is gesture processing */
 	protected _isActive: boolean;
 
 	protected whiteboard: Whiteboard;
 
+	/** Returns gesture processing status */
 	public get isActive(): boolean {
 		return this._isActive;
 	}
@@ -14,13 +17,9 @@ export abstract class Gesture {
 		this.whiteboard = whiteboard;
 	}
 
+	/** Event handler */
 	public abstract onEvent(event: PointerEvent): void;
 
-	public abstract reset(): void;
-
-	public abstract onPointerDown(event: PointerEvent): void;
-
-	public abstract onPointerMove(event: PointerEvent): void;
-
-	public abstract onPointerUp(event: PointerEvent): void;
+	/** Resets internal state */
+	protected abstract reset(): void;
 }

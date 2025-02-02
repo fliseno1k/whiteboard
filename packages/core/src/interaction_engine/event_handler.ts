@@ -28,7 +28,7 @@ export class EventHandler {
 		];
 
 		for (const [eventType, options] of config) {
-			element.addEventListener(eventType, this.dispatchable.dispatch, options);
+			element.addEventListener(eventType, (event) => this.dispatchable.dispatch(event), options);
 		}
 	}
 
