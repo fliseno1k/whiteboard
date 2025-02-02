@@ -1,4 +1,4 @@
-import { type Gesture, PanGesture, PinchGesture } from "./gestures";
+import { type Gesture, PanGesture, PinchGesture } from "./interaction_engine/gestures";
 import { EventType, noop } from "./utils";
 import { Whiteboard } from "./whiteboard";
 
@@ -6,29 +6,16 @@ import { Whiteboard } from "./whiteboard";
  * A surface where user interactions are detected and processed
  */
 export class InputSurface {
-	/**
-	 * Active pointer events set
-	 */
+	/** Active pointer events set */
 	private readonly pointers: Map<PointerEvent["pointerId"], PointerEvent>;
 
-	/**
-	 * Gestures list
-	 */
+	/** Gestures list */
 	private readonly gestures: Array<Gesture>;
 
-	/**
-	 * Active gestures list
-	 */
-	private readonly activeGestures: Set<Gesture>;
-
-	/**
-	 * Whiteboard
-	 */
+	/** Whiteboard */
 	private readonly whiteboard: Whiteboard;
 
-	/**
-	 * Abort signal
-	 */
+	/** Abort signal */
 	private abortController: AbortController | null;
 
 	constructor(whiteboard: Whiteboard) {

@@ -1,7 +1,6 @@
-import type { Whiteboard } from "../whiteboard";
-import type { Gesture } from "./types";
+import type { Whiteboard } from "../../whiteboard";
 
-export abstract class BaseGesture implements Gesture {
+export abstract class Gesture {
 	protected _isActive: boolean;
 
 	protected whiteboard: Whiteboard;
@@ -14,6 +13,8 @@ export abstract class BaseGesture implements Gesture {
 		this._isActive = false;
 		this.whiteboard = whiteboard;
 	}
+
+	public abstract onEvent(event: PointerEvent): void;
 
 	public abstract reset(): void;
 

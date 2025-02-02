@@ -1,7 +1,7 @@
-import { Whiteboard } from "../whiteboard";
-import { BaseGesture } from "./base-gesture";
+import { Whiteboard } from "../../whiteboard";
+import { Gesture } from "./gesture";
 
-export class PinchGesture extends BaseGesture {
+export class PinchGesture extends Gesture {
 	private initialScale: number = 1;
 
 	private initialDistance: number = 0;
@@ -13,6 +13,8 @@ export class PinchGesture extends BaseGesture {
 	constructor(whiteboard: Whiteboard) {
 		super(whiteboard);
 	}
+
+	public onEvent(event: PointerEvent): void {}
 
 	public onPointerDown(event: PointerEvent): void {
 		this.pointers.set(event.pointerId, event);

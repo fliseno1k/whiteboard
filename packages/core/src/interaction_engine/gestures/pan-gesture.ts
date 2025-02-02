@@ -1,7 +1,7 @@
-import type { Whiteboard } from "../whiteboard";
-import { BaseGesture } from "./base-gesture";
+import type { Whiteboard } from "../../whiteboard";
+import { Gesture } from "./gesture";
 
-export class PanGesture extends BaseGesture {
+export class PanGesture extends Gesture {
 	private pointerId: number | null = null;
 
 	private lastCoords: Array<number> = [0, 0];
@@ -9,6 +9,8 @@ export class PanGesture extends BaseGesture {
 	constructor(whiteboard: Whiteboard) {
 		super(whiteboard);
 	}
+
+	public onEvent(event: PointerEvent): void {}
 
 	public onPointerDown(event: PointerEvent): void {
 		if (!this.shouldStartPanning(event)) return;
