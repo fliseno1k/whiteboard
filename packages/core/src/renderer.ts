@@ -1,3 +1,4 @@
+/** Whiteboard scene renderer */
 export class Renderer {
 	/** Rendering target HTML element */
 	public readonly domElement: HTMLCanvasElement;
@@ -19,8 +20,8 @@ export class Renderer {
 		this.domElement.style.height = height + "px";
 	}
 
-	/** Repaint scene */
-	public paint(): void {}
+	/** Render scene */
+	public render(): void {}
 
 	/** Create rendering target HTML element */
 	private createRenderingTarget(): HTMLCanvasElement {

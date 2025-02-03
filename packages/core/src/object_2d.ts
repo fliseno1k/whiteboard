@@ -37,8 +37,8 @@ export class Object2D {
 	}
 
 	/** Compute geometries how to draw the shape */
-	public render(): void {}
+	public privaterender(): void {}
 
-	/** Draw the computed geometries of the shape on the canvas */
-	public draw(): void {}
+	/** Draw the computed geometries of the shape */
+	public render(): void {}
 }
