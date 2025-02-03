@@ -1,16 +1,16 @@
-import { type UID, uid } from "./unique_id";
+import { type UUID, generateUUID } from "./unique_id";
 
 /** Manages the registration and unregistration of entities. */
 export class Registry<Entity> {
 	/** Registered {@link Entity | entities} pool */
-	private readonly pool: Map<UID, Entity> = new Map();
+	private readonly pool: Map<UUID, Entity> = new Map();
 
 	/**
 	 * Register entity
 	 * @returns UID of the registered {@link Entity}
 	 */
-	public register(entity: Entity): UID {
-		const id = uid();
+	public register(entity: Entity): UUID {
+		const id = generateUUID();
 		this.pool.set(id, entity);
 
 		return id;
@@ -20,7 +20,7 @@ export class Registry<Entity> {
 	 * Unregister entity
 	 * @returns true if an {@link Entity} in the {@link Registry} existed and has been removed, or false if the {@link Entity} does not exist.
 	 */
-	public unregister(entityUID: UID): boolean {
+	public unregister(entityUID: UUID): boolean {
 		return this.pool.delete(entityUID);
 	}
 

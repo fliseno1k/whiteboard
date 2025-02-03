@@ -1,4 +1,4 @@
-import type { UID, Registry } from "../utils";
+import type { UUID, Registry } from "../utils";
 import type { Gesture } from "./gestures";
 import type { Plugin } from "./plugins";
 import type { Dispatchable } from "./types";
@@ -10,9 +10,6 @@ import type { Dispatchable } from "./types";
  * The interface should be modular, extensible, and event-driven.
  */
 export class InteractionEngine implements Dispatchable {
-	/** Captured pointer evens */
-	private readonly pointers: Map<PointerEvent["pointerId"], PointerEvent> = new Map();
-
 	constructor(
 		/** Gestures registry */
 		private readonly gesturesRegistry: Registry<Gesture>,
@@ -30,23 +27,23 @@ export class InteractionEngine implements Dispatchable {
 	}
 
 	/** Register gesture */
-	public registerGesture(gesture: Gesture): UID {
+	public registerGesture(gesture: Gesture): UUID {
 		return this.gesturesRegistry.register(gesture);
 	}
 
 	/** Unregister gesture */
-	public unregisterGesture(gestureUID: UID): boolean {
-		return this.gesturesRegistry.unregister(gestureUID);
+	public unregisterGesture(gestureUUID: UUID): boolean {
+		return this.gesturesRegistry.unregister(gestureUUID);
 	}
 
 	/** Register gesture */
-	public registerPlugin(plugin: Plugin): UID {
+	public registerPlugin(plugin: Plugin): UUID {
 		return this.pluginsRegistry.register(plugin);
 	}
 
 	/** Unregister gesture */
-	public unregisterPlugin(pluginUID: UID): boolean {
-		return this.pluginsRegistry.unregister(pluginUID);
+	public unregisterPlugin(pluginUUID: UUID): boolean {
+		return this.pluginsRegistry.unregister(pluginUUID);
 	}
 
 	/**
