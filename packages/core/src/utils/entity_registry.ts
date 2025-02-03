@@ -24,6 +24,11 @@ export class Registry<Entity> {
 		return this.pool.delete(entityUID);
 	}
 
+	/** Clear pool of registered entities */
+	public clear(): void {
+		this.pool.clear();
+	}
+
 	/** Returns an iterator that iterates over the entities in the pool. */
 	*[Symbol.iterator](): IterableIterator<Entity> {
 		for (const [_, entity] of this.pool) {
