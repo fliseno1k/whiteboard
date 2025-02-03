@@ -5,14 +5,12 @@ export class EventHandler {
 	/** Switch off for event listeners */
 	private abortController: AbortController | null = null;
 
-	constructor(private readonly dispatchable: Dispatchable) {}
-
 	/** Start listening and reacting on HTML events */
-	public connect(element: HTMLElement): void {
-		this.abortController?.abort();
+	public connect(element: HTMLElement, dispatchable: Dispatchable): void {
+		this.disconnect();
 		this.abortController = new AbortController();
-
 		const { signal } = this.abortController;
+		
 		const config: [Event["type"], AddEventListenerOptions][] = [
 			[NativeEventType.CLICK, { signal }],
 			[NativeEventType.DBLCLICK, { signal }],
@@ -28,7 +26,7 @@ export class EventHandler {
 		];
 
 		for (const [eventType, options] of config) {
-			element.addEventListener(eventType, (event) => this.dispatchable.dispatch(event), options);
+			element.addEventListener(eventType, (event) => dispatchable.dispatch(event), options);
 		}
 	}
 
